@@ -1,0 +1,121 @@
+/* 모바일 터치 컨트롤 — 1280×720 디자인 좌표 (HudViewportSync가 캔버스와 동일 비율로 scale) */
+
+.mobile-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.mobile-controls.hidden {
+  display: none;
+}
+
+/* 좌측 하단: 좌/우 이동 버튼 */
+.mobile-controls__move {
+  position: absolute;
+  left: 48px;
+  bottom: 48px;
+  display: flex;
+  gap: 24px;
+  pointer-events: none;
+}
+
+/* 시각 버튼보다 넓은 터치존 — gap·상·하·좌·우 여유 포함 */
+.mobile-controls__move-hit {
+  position: absolute;
+  left: -32px;
+  right: -32px;
+  top: -96px;
+  bottom: -20px;
+  pointer-events: auto;
+  touch-action: none;
+  background: transparent;
+}
+
+.mobile-btn {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--doom-font);
+  color: rgba(232, 232, 236, 0.85);
+  cursor: pointer;
+  transition:
+    background-color 0.08s ease,
+    border-color 0.08s ease,
+    transform 0.08s ease;
+}
+
+.mobile-btn--left,
+.mobile-btn--right {
+  position: relative;
+  z-index: 1;
+  width: 110px;
+  height: 110px;
+  font-size: 46px;
+  line-height: 1;
+  border: 3px solid rgba(180, 180, 190, 0.5);
+  border-radius: 24px;
+  background: rgba(20, 20, 26, 0.42);
+  pointer-events: none;
+}
+
+.mobile-btn--left.is-active,
+.mobile-btn--right.is-active {
+  background: rgba(204, 0, 0, 0.5);
+  border-color: var(--doom-red-bright);
+  transform: scale(0.94);
+}
+
+/* 우측 하단: 반투명 원형 총알 발사 버튼 */
+.mobile-btn--fire {
+  position: absolute;
+  right: 60px;
+  bottom: 48px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 120, 40, 0.55);
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(255, 170, 60, 0.28) 0%,
+    rgba(120, 40, 0, 0.34) 60%,
+    rgba(20, 10, 6, 0.4) 100%
+  );
+  box-shadow:
+    inset 0 0 24px rgba(255, 120, 40, 0.35),
+    0 0 18px rgba(255, 90, 0, 0.25);
+}
+
+.mobile-btn--fire.is-active {
+  border-color: var(--doom-red-bright);
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(255, 200, 90, 0.45) 0%,
+    rgba(200, 60, 0, 0.5) 60%,
+    rgba(40, 14, 6, 0.55) 100%
+  );
+  box-shadow:
+    inset 0 0 30px rgba(255, 150, 60, 0.5),
+    0 0 26px rgba(255, 60, 0, 0.5);
+  transform: scale(0.93);
+}
+
+.mobile-btn__fire-icon {
+  width: 84px;
+  height: 84px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(255, 140, 40, 0.6));
+}

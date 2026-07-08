@@ -1,0 +1,52 @@
+/* 초기 부트 — JS 번들 전 인라인 스타일과 함께 즉시 표시 */
+
+.boot-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: #0a0a0c;
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 280ms ease-out;
+}
+
+.boot-curtain__spinner {
+  width: 52px;
+  height: 52px;
+  border: 3px solid #2a2a32;
+  border-top-color: var(--doom-red-bright, #ff2200);
+  border-right-color: rgba(255, 34, 0, 0.35);
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(255, 34, 0, 0.25);
+  animation: boot-curtain-spin 0.72s linear infinite;
+}
+
+.boot-curtain__label {
+  margin: 0;
+  font-family: var(--doom-font, Impact, 'Arial Black', system-ui, sans-serif);
+  font-size: 13px;
+  letter-spacing: 0.38em;
+  text-indent: 0.38em;
+  color: #4a4a54;
+  text-transform: uppercase;
+}
+
+.boot-curtain--dismiss {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot-curtain--gone {
+  display: none;
+}
+
+@keyframes boot-curtain-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

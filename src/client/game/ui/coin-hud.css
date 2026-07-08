@@ -1,0 +1,132 @@
+/* 코인 HUD — 우측 상단(설정 버튼 옆) 카운터 + 사망 위치 → UI fly 연출 */
+
+.doom-hud__coins {
+  height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 2px solid var(--doom-metal);
+  background: rgba(10, 10, 12, 0.75);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+}
+
+.doom-hud__coin-icon {
+  width: var(--coin-icon-size, 30px);
+  height: var(--coin-icon-size, 30px);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: calc(var(--coin-icon-size, 30px) * 9) var(--coin-icon-size, 30px);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.doom-hud__coin-icon--pulse {
+  animation: coin-icon-pulse 360ms ease-out;
+}
+
+@keyframes coin-icon-pulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.28);
+    filter: drop-shadow(0 0 8px #ffd447);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.doom-hud__coin-count {
+  font-family: var(--doom-font);
+  font-size: 26px;
+  line-height: 1;
+  color: #ffd447;
+  text-shadow: 0 0 6px #b8860b, 0 0 14px #7a5300;
+  font-variant-numeric: tabular-nums;
+}
+
+#coin-fly-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 7;
+}
+
+#coin-fly-layer.coin-fly-layer--boss-chest {
+  z-index: 23;
+}
+
+.coin-fly--boss-chest {
+  filter: drop-shadow(0 0 5px rgba(255, 210, 50, 0.55));
+  z-index: 2;
+}
+
+.coin-boss-trail {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 242, 140, 0.98) 0%,
+    rgba(255, 204, 50, 0.78) 42%,
+    rgba(255, 168, 0, 0.35) 72%,
+    transparent 100%
+  );
+  box-shadow: 0 0 7px rgba(255, 220, 80, 0.6);
+  animation: coin-boss-trail-fade 0.48s ease-out forwards;
+}
+
+@keyframes coin-boss-trail-fade {
+  0% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+}
+
+.coin-fly--boss-hold {
+  animation: coin-spin 0.62s steps(9) infinite, coin-boss-hold-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes coin-boss-hold-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 7px rgba(255, 210, 50, 0.65));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 230, 90, 0.9));
+  }
+}
+
+.coin-fly {
+  position: absolute;
+  width: var(--coin-fly-size, 34px);
+  height: var(--coin-fly-size, 34px);
+  background-repeat: no-repeat;
+  background-size: calc(var(--coin-fly-size, 34px) * 9) var(--coin-fly-size, 34px);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transform: translate(-50%, -50%) scale(0.3);
+  filter: drop-shadow(0 0 5px rgba(255, 200, 60, 0.55));
+  animation: coin-spin 0.62s steps(9) infinite;
+  will-change: transform, left, top, opacity;
+}
+
+@keyframes coin-spin {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: calc(var(--coin-fly-size, 34px) * -9) 0;
+  }
+}

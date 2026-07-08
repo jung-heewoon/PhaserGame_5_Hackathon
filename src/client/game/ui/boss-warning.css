@@ -1,0 +1,69 @@
+.boss-warning-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 12;
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+}
+
+.boss-warning-overlay.is-active {
+  opacity: 1;
+}
+
+.boss-warning-overlay.hidden {
+  display: none;
+}
+
+.boss-warning-overlay__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transform: translateY(var(--boss-warning-offset-y, -40px));
+}
+
+.boss-warning-bar {
+  width: calc(144px * var(--boss-warning-bar-scale, 1));
+  height: calc(96px * var(--boss-warning-bar-scale, 1));
+  background-repeat: no-repeat;
+  background-size: calc(144px * 32 * var(--boss-warning-bar-scale, 1)) calc(96px * var(--boss-warning-bar-scale, 1));
+  image-rendering: pixelated;
+}
+
+.boss-warning-bang {
+  width: calc(80px * var(--boss-warning-bang-scale, 1));
+  height: calc(80px * var(--boss-warning-bang-scale, 1));
+  background-repeat: no-repeat;
+  background-size: calc(80px * 16 * var(--boss-warning-bang-scale, 1)) calc(80px * var(--boss-warning-bang-scale, 1));
+  image-rendering: pixelated;
+}
+
+.boss-warning-overlay.is-active .boss-warning-bar {
+  animation: boss-warning-bar-play 2.4s steps(32) infinite;
+}
+
+.boss-warning-overlay.is-active .boss-warning-bang {
+  animation: boss-warning-bang-play 1.14s steps(16) infinite;
+}
+
+@keyframes boss-warning-bar-play {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: calc(-144px * 32 * var(--boss-warning-bar-scale, 1)) 0;
+  }
+}
+
+@keyframes boss-warning-bang-play {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: calc(-80px * 16 * var(--boss-warning-bang-scale, 1)) 0;
+  }
+}

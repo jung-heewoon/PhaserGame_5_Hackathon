@@ -1,0 +1,126 @@
+key,ko,en
+hud.dice,주사위,DICE
+hud.score,점수,SCORE
+hud.combo,콤보!,COMBO!
+hud.hp,HP,HP
+settings.open,설정,Settings
+settings.title,설정,SETTINGS
+settings.language,언어,LANGUAGE
+settings.bgm,BGM,BGM
+settings.sfx,SFX,SFX
+settings.close,닫기,CLOSE
+settings.lang.ko,한국어,한국어
+settings.lang.en,English,English
+yatzy.title,다이스 포커 타임,DICE POKER TIME
+yatzy.test_weapon,테스트 무기,TEST WEAPON
+yatzy.equip,장착하기,EQUIP
+yatzy.weapon_prefix,▶ {weapon},▶ {weapon}
+yatzy.reroll,다시 굴리기,REROLL
+yatzy.rolls_left,남은 리롤,REROLLS
+yatzy.dice_owned,보유 주사위,DICE
+yatzy.hold,홀드,HOLD
+yatzy.held,홀드됨,HELD
+yatzy.ammo,장탄,AMMO
+yatzy.damage,데미지,DMG
+yatzy.infinite,∞,∞
+yatzy.free,무료,FREE
+yatzy.cost_spend,주사위 소모 -{cost},-{cost} dice
+yatzy.insufficient,주사위 부족 (-{need}),Not enough dice (need {need})
+yatzy.hold_released,홀드 해제됨,HOLDS RELEASED
+yatzy.test_panel,테스트,TEST
+yatzy.test_auto,족보 자동,AUTO (HAND)
+gameover.title,게임 오버,GAME OVER
+gameover.subtitle,런이 종료되었습니다,Your run has ended
+gameover.highScore,최고 기록,HIGH SCORE
+gameover.newRecord,NEW!,NEW!
+gameover.time,생존 시간,TIME
+gameover.score,획득 점수,SCORE
+gameover.kills,처치,KILLS
+gameover.coins,획득 코인,COINS
+gameover.retry,다시하기,RETRY
+gameover.upgrade,업그레이드,UPGRADE
+upgrade.title,무기 강화,WEAPON UPGRADE
+upgrade.damage,공격력,DMG
+upgrade.button,강화,UPGRADE
+upgrade.close,닫기,CLOSE
+upgrade.insufficient,코인이 부족합니다,Not enough coins
+toast.dice_shortage,"주사위 부족 — 기본 권총 (무한 탄창)","Not enough dice — default pistol (infinite ammo)"
+toast.hold_max,최대 {max}개까지 홀드할 수 있습니다,You can hold up to {max} dice
+hand.YATZY,올빙고,ALL BINGO
+hand.LARGE_STRAIGHT,라지 스트레이트,LARGE STRAIGHT
+hand.SMALL_STRAIGHT,스몰 스트레이트,SMALL STRAIGHT
+hand.FULL_HOUSE,풀하우스,FULL HOUSE
+hand.FOUR_OF_A_KIND,포카드,FOUR OF A KIND
+hand.THREE_OF_A_KIND,트리플,THREE OF A KIND
+hand.TWO_PAIR,투 페어,TWO PAIR
+hand.ONE_PAIR,원 페어,ONE PAIR
+hand.NONE,하이 카드,HIGH CARD
+weapon.NUCLEAR_LAUNCHER,핵미사일 발사기,NUCLEAR LAUNCHER
+weapon.RAILGUN,레일건,RAILGUN
+weapon.BEAM_GUN,빔 건,BEAM GUN
+weapon.MISSILE_LAUNCHER,미사일 발사기,MISSILE LAUNCHER
+weapon.MINIGUN,미니건,MINIGUN
+weapon.SHOTGUN,샷건,SHOTGUN
+weapon.DUAL_PISTOL,듀얼 피스톨,DUAL PISTOL
+weapon.REVOLVER,리볼버,REVOLVER
+weapon.DEFAULT_PISTOL,기본 권총,DEFAULT PISTOL
+weapon.summary.NUCLEAR_LAUNCHER,화면 전체 초토화,Full-screen wipe
+weapon.summary.RAILGUN,관통 즉시 직선,Piercing instant line
+weapon.summary.BEAM_GUN,연속 빔 히트스캔,Continuous hitscan beam
+weapon.summary.MISSILE_LAUNCHER,유도 미사일 광역,Homing AoE missiles
+weapon.summary.MINIGUN,초고속 연사,Rapid-fire spray
+weapon.summary.SHOTGUN,근접 산탄 확산,Close-range spread
+weapon.summary.DUAL_PISTOL,좌우 2연발,Twin side shots
+weapon.summary.REVOLVER,강한 단발,Heavy single shots
+weapon.summary.DEFAULT_PISTOL,기본 단발,Basic single shot
+status.frozen,얼어버림,FROZEN
+bossChest.title,보물 상자!,TREASURE!
+bossChest.bronze,브론즈 상자,BRONZE CHEST
+bossChest.silver,실버 상자,SILVER CHEST
+bossChest.gold,골드 상자,GOLD CHEST
+bossChest.premium,프리미엄 상자,PREMIUM CHEST
+bossChest.currency,골드,GOLD
+bossChest.dice,주사위,DICE
+bossChest.close,닫기,CLOSE
+tutorial.tip_aria,도움말,Help
+tutorial.settings_tip,? 게임 가이드,? GAME GUIDE
+tutorial.tap_anywhere,아무 곳이나 클릭하세요,Tap anywhere to continue
+tutorial.tap_anywhere_mobile,화면 아무 곳이나 터치하세요,Tap anywhere to continue
+tutorial.nav.prev,이전,PREV
+tutorial.nav.next,다음,NEXT
+tutorial.nav.close,닫기,CLOSE
+tutorial.nav.page,{current}/{total},{current}/{total}
+tutorial.controls.title,조작 방법,CONTROLS
+tutorial.controls.move_title,이동,MOVE
+tutorial.controls.move_desc,좌우로 스트레이프하여 장애물과 적을 피하세요.,Strafe left and right to dodge obstacles and enemies.
+tutorial.controls.fire_title,발사,FIRE
+tutorial.controls.fire_desc,버튼을 누르고 있는 동안 연사합니다.,Hold the button to keep firing.
+tutorial.controls.or,또는,or
+tutorial.controls.mouse,클릭,CLICK
+tutorial.controls.auto_run,※ 자동으로 앞으로 달립니다.,You automatically run forward.
+tutorial.controls.mobile.move_desc,좌하단 ◀ ▶ 버튼으로 좌우 이동합니다.,Use the ◀ ▶ buttons at the bottom-left to move.
+tutorial.controls.mobile.fire_desc,우하단 발사 버튼을 길게 눌러 사격합니다. 이동과 동시 입력이 가능합니다.,Hold the fire button at the bottom-right. Move and fire at the same time.
+tutorial.items.title,필드 아이템,PICKUPS
+tutorial.items.dice_title,주사위,DICE
+tutorial.items.dice_desc,필드에서 수집합니다. 5개가 모이면 다이스 포커에 진입합니다.,Collect on the field. Gather 5 to enter Dice Poker.
+tutorial.items.heart_title,하트,HEART
+tutorial.items.heart_desc,HP를 1 회복합니다. (최대 3),Restores 1 HP (max 3).
+tutorial.items.bullet_title,총알,AMMO
+tutorial.items.bullet_desc,현재 무기의 탄약을 보충합니다.,Refills ammo for your current weapon.
+tutorial.items.fly_note,아이템은 HUD로 날아가며 즉시 적용됩니다.,Pickups fly to your HUD and apply instantly.
+tutorial.yatzy.title,다이스 포커,DICE POKER
+tutorial.yatzy.step1,5개의 주사위를 굴려 포커 족보를 만듭니다.,Roll 5 dice to form a poker hand.
+tutorial.yatzy.step2,HOLD로 원하는 주사위를 고정한 뒤 REROLL합니다. (최대 2회) 홀드 수에 따라 추가 주사위가 소모됩니다.,HOLD dice you want then REROLL (up to 2 times). Extra dice are spent based on how many you hold.
+tutorial.yatzy.step3,높은 족보일수록 더 강한 무기가 나옵니다!,Higher hands unlock stronger weapons!
+tutorial.yatzy.step4,EQUIP을 눌러 무기를 장착하고 런을 이어갑니다.,Press EQUIP to arm yourself and continue the run.
+tutorial.yatzy.hands.title,족보 & 무기,HANDS & WEAPONS
+tutorial.yatzy.hands.intro,주사위 조합(족보)에 따라 장착되는 무기가 달라집니다. 아래는 강한 순서대로 정리한 전체 목록입니다.,Your dice combination (hand) decides your weapon. Below is the full list from strongest to weakest.
+tutorial.hand_desc.YATZY,같은 눈금 5개 — 올빙고! 최강 족보!,Five of a kind — All Bingo! The ultimate hand!
+tutorial.hand_desc.LARGE_STRAIGHT,연속된 숫자 5개 (예: 1-2-3-4-5),Five consecutive numbers (e.g. 1-2-3-4-5)
+tutorial.hand_desc.SMALL_STRAIGHT,연속된 숫자 4개,Four consecutive numbers
+tutorial.hand_desc.FULL_HOUSE,같은 눈금 3개 + 다른 눈금 2개,Three of a kind plus a pair
+tutorial.hand_desc.FOUR_OF_A_KIND,같은 눈금 4개,Four of a kind
+tutorial.hand_desc.THREE_OF_A_KIND,같은 눈금 3개,Three of a kind
+tutorial.hand_desc.TWO_PAIR,서로 다른 페어 2쌍,Two different pairs
+tutorial.hand_desc.ONE_PAIR,같은 눈금 2개,One pair
+tutorial.hand_desc.NONE,특별한 조합 없음 (하이 카드),No special combo (high card)

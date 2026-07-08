@@ -1,0 +1,73 @@
+import TPFEntity from 'twopointfive-phaser-3/src/twopointfive/entity.ts';
+import TPFTimer from 'twopointfive-phaser-3/src/twopointfive/timer.ts';
+import type { EntityContext, ImageInfo } from 'twopointfive-phaser-3/src/twopointfive/types.ts';
+import { HEART_PICKUP_FRAME_PX } from '../assets/HeartPickupAssets.ts';
+import { clampToCorridorX } from '../config/RunGameConfig.ts';
+import type RunnerPlayerEntity from './RunnerPlayerEntity.ts';
+import type { EntityPool } from '../systems/EntityPool.ts';
+import type { RunSession } from '../systems/RunSession.ts';
+
+export default class HeartPickupEntity extends TPFEntity {
+  private readonly pickupImage: ImageInfo | null;
+  private readonly session: RunSession | null;
+  private readonly entityPool: EntityPool | null;
+  private bounceTimer: TPFTimer | null = null;
+
+  constructor(
+    x: number,
+    y: number,
+    settings: Record<string, unknown> | null,
+    context: Partial<EntityContext> | null,
+  ) {
+    super(x, y, settings, context);
+    this.checkAgainst = TPFEntity.TYPE.A;
+    this.size = { x: HEART_PICKUP_FRAME_PX, y: HEART_PICKUP_FRAME_PX };
+    this.scale = 1.15;
+    this.gravityFactor = 0;
+    this.dynamicLight = false;
+    this.pickupImage = (settings?.pickupImage as ImageInfo) ?? null;
+    this.session = (settings?.session as RunSession) ?? null;
+    this.entityPool = (settings?.entityPool as EntityPool) ?? null;
+  }
+
+  init(x: number, y: number, settings: Record<string, unknown> | null): void {
+    if (this.pickupImage) {
+      this.animSheet = {
+        image: this.pickupImage,
+        width: HEART_PICKUP_FRAME_PX,
+        height: HEART_PICKUP_FRAME_PX,
+      };
+      this.addAnim('idle', 10, [0]);
+    }
+    this.bounceTimer = new TPFTimer();
+    super.init(x, y, settings);
+    this.pos.x = clampToCorridorX(this.pos.x, this.size.x);
+  }
+
+  update(): void {
+    if (this._killed) return;
+    if (this.session?.isGameplayFrozen) return;
+    if (this.bounceTimer) {
+      this.pos.z = (Math.cos(this.bounceTimer.delta() * 3) + 1) * 5;
+    }
+    super.update();
+    this.pos.x = clampToCorridorX(this.pos.x, this.size.x);
+  }
+
+  check(other: TPFEntity): void {
+    if (other.type !== TPFEntity.TYPE.A) return;
+    const player = other as RunnerPlayerEntity;
+    if (player.isDead || this.session?.isGameplayFrozen) return;
+    if (!player.tryHeal(1)) return;
+
+    const cx = this.pos.x + this.size.x / 2;
+    const cy = this.pos.y + this.size.y / 2;
+    const cz = this.pos.z;
+    this.entityPool?.notifyPickup('heart', cx, cy, cz);
+    if (this.entityPool) {
+      this.entityPool.releaseHeart(this);
+    } else {
+      this.kill();
+    }
+  }
+}

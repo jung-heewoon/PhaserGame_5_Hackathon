@@ -1,0 +1,301 @@
+/* 무기 강화(업그레이드) 팝업 — DOOM 톤. 1280×720 디자인 좌표 기준. */
+
+.doom-modal--upgrade {
+  background: rgba(4, 6, 10, 0.86);
+}
+
+.doom-upgrade {
+  position: relative;
+  width: min(600px, 94%);
+}
+
+/* 타이틀 + 보유 코인 헤더 행 */
+.doom-upgrade__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* 보유 코인 — 무기 강화 타이틀 우측 */
+.doom-upgrade__wallet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 2px solid #b8860b;
+  background: rgba(10, 8, 4, 0.92);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.85), 0 0 14px rgba(184, 134, 11, 0.35);
+}
+
+.doom-upgrade__wallet-icon {
+  width: 28px;
+  height: 28px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 252px 28px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.doom-upgrade__wallet-count {
+  font-family: var(--doom-font);
+  font-size: 26px;
+  line-height: 1;
+  color: #ffd447;
+  text-shadow: 0 0 6px #b8860b, 0 0 14px #7a5300;
+  font-variant-numeric: tabular-nums;
+}
+
+.doom-modal__panel--upgrade {
+  width: 100%;
+  max-height: 640px;
+  padding: 22px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-color: var(--doom-metal);
+  outline-color: var(--doom-red);
+  box-shadow:
+    inset 0 0 22px rgba(0, 0, 0, 0.7),
+    0 0 28px rgba(0, 0, 0, 0.6);
+}
+
+.doom-modal__title--upgrade {
+  color: #ffcf47;
+  text-shadow: 0 0 8px #b8860b, 0 0 20px #7a5300;
+  animation: none;
+  margin: 0;
+  font-size: 30px;
+}
+
+.doom-upgrade__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 6px;
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.doom-upgrade__list.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* 드래그 중에는 행/버튼이 포인터를 가로채지 않도록 */
+.doom-upgrade__list.is-dragging * {
+  pointer-events: none;
+}
+
+.doom-upgrade__list::-webkit-scrollbar {
+  width: 8px;
+}
+.doom-upgrade__list::-webkit-scrollbar-thumb {
+  background: var(--doom-metal);
+}
+
+/* 강화 행 */
+.doom-up-row {
+  display: grid;
+  grid-template-columns: 62px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 2px solid rgba(58, 58, 66, 0.85);
+  background: linear-gradient(180deg, rgba(18, 18, 22, 0.92), rgba(8, 8, 10, 0.92));
+}
+
+.doom-up-row__icon-wrap {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  border: 2px solid var(--doom-metal);
+  background: #0b0b0e;
+  box-shadow: inset 0 0 10px #000;
+}
+
+.doom-up-row__icon {
+  position: absolute;
+  inset: 6px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* 총 레벨 배지 (+N) — 아이콘 우하단에 살짝 겹침 */
+.doom-up-row__level {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  min-width: 26px;
+  padding: 2px 6px;
+  font-family: var(--doom-font);
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
+  color: #0a0a0c;
+  background: var(--doom-green);
+  border: 2px solid #0a0a0c;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.doom-up-row__level.is-hidden {
+  display: none;
+}
+
+.doom-up-row__level--pulse {
+  animation: doom-up-level-pulse 420ms ease-out;
+}
+
+@keyframes doom-up-level-pulse {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.4);
+    filter: drop-shadow(0 0 10px #00ff41);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.doom-up-row__info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.doom-up-row__name {
+  font-family: var(--doom-font);
+  font-size: 19px;
+  letter-spacing: 0.04em;
+  color: #f0f0f4;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.doom-up-row__hand {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #8a8a94;
+}
+
+.doom-up-row__dmg {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--doom-font);
+}
+
+.doom-up-row__dmg-label {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #7c7c86;
+  text-transform: uppercase;
+}
+
+.doom-up-row__dmg-value {
+  font-size: 20px;
+  line-height: 1;
+  color: #e8e8ec;
+  font-variant-numeric: tabular-nums;
+}
+
+.doom-up-row__mult {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--doom-green);
+  text-shadow: var(--doom-glow-green);
+  font-variant-numeric: tabular-nums;
+}
+
+.doom-up-row__mult-next {
+  font-size: 14px;
+  color: #6fae7e;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 강화 버튼 */
+.doom-up-row__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  min-width: 92px;
+  justify-content: center;
+  font-family: var(--doom-font);
+  font-size: 18px;
+  color: #fff;
+  background: var(--doom-red);
+  border: 2px solid var(--doom-red-bright);
+  cursor: pointer;
+  text-shadow: var(--doom-glow-red);
+  box-shadow: 0 0 14px rgba(255, 0, 0, 0.45);
+  pointer-events: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.doom-up-row__btn:hover {
+  background: var(--doom-red-bright);
+  box-shadow: 0 0 22px rgba(255, 34, 0, 0.75);
+}
+
+.doom-up-row__btn-coin {
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 180px 20px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* 코인 부족 — 잠금 표현(클릭은 가능해 토스트 노출) */
+.doom-up-row__btn--locked {
+  color: #7a7a82;
+  background: rgba(24, 24, 28, 0.9);
+  border-color: var(--doom-metal);
+  text-shadow: none;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+  cursor: not-allowed;
+}
+
+.doom-up-row__btn--locked:hover {
+  background: rgba(24, 24, 28, 0.9);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+.doom-up-row__btn--locked .doom-up-row__btn-coin {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.doom-upgrade__close {
+  align-self: center;
+  min-width: 160px;
+}
+
+/* 게임오버의 업그레이드 버튼 — 골드 강조 */
+.doom-btn--upgrade {
+  color: #1a1206;
+  background: linear-gradient(180deg, #ffd76b, #d99b1f);
+  border-color: #ffe08a;
+  text-shadow: none;
+  box-shadow: 0 0 16px rgba(216, 155, 31, 0.55);
+}
+
+.doom-btn--upgrade:hover {
+  background: linear-gradient(180deg, #ffe387, #e8a92a);
+  box-shadow: 0 0 24px rgba(255, 208, 90, 0.85);
+}

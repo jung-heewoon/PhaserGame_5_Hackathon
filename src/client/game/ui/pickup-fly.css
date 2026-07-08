@@ -1,0 +1,51 @@
+/* 하트·주사위·총알 픽업 → 각 HUD로 빨려드는 fly 연출 (코인 연출과 동일 골격) */
+
+#pickup-fly-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 7;
+}
+
+#pickup-fly-layer.pickup-fly-layer--boss-chest {
+  z-index: 23;
+}
+
+.pickup-fly--boss-chest {
+  filter: drop-shadow(0 0 6px rgba(200, 220, 255, 0.55));
+  z-index: 2;
+}
+
+.pickup-fly--boss-hold {
+  filter: drop-shadow(0 0 8px rgba(220, 235, 255, 0.65));
+}
+
+.pickup-fly {
+  position: absolute;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transform: translate(-50%, -50%) scale(0.4);
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.45));
+  will-change: transform, left, top, opacity;
+}
+
+.pickup-target-pulse {
+  animation: pickup-target-pop 320ms ease-out;
+}
+
+@keyframes pickup-target-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.22);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.65));
+  }
+  100% {
+    transform: scale(1);
+  }
+}
