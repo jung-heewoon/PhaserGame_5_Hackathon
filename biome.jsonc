@@ -1,13 +1,22 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
   "css": {"formatter": {"enabled": true, "quoteStyle": "single"}},
-  "files": {"includes": ["**", "!dist/", "!public/*.js*"]},
+  "files": {
+    "includes": ["**", "!dist/", "!public/", "!src/client/game"]
+  },
   "formatter": {
     "bracketSpacing": false,
     "enabled": true,
     "indentStyle": "space"
   },
   "html": {"formatter": {"enabled": true}},
+  "overrides": [
+    {
+      "includes": ["src/client/game.html", "public/**"],
+      "linter": {"enabled": false},
+      "formatter": {"enabled": false}
+    }
+  ],
   "javascript": {
     "formatter": {
       "arrowParentheses": "asNeeded",
@@ -22,7 +31,8 @@
       "correctness": {
         // Biome resolves conditional exports without the browser condition,
         // which reports false positives for `@devvit/web/client` named exports.
-        "noUnresolvedImports": "off"
+        "noUnresolvedImports": "off",
+        "noUndeclaredDependencies": "off"
       },
       "nursery": {
         "noFloatingPromises": "error",

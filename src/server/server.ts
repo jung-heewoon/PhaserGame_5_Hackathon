@@ -10,15 +10,15 @@ import {
   Endpoint,
   EndpointMethod,
   type ErrorRsp,
-  type GetCounterRsp,
-  type IncCounterReq,
-  type IncCounterRsp,
+  type GetPersistenceBulkRsp,
+  type SetPersistenceReq,
+  type SetPersistenceRsp,
 } from '../shared/api.ts'
-import {dbGetCounter, dbIncCounter} from './db.ts'
+import {dbGetPersistenceBulk, dbGetUsername, dbSetPersistence} from './db.ts'
 
 type AnyRsp =
-  | GetCounterRsp
-  | IncCounterRsp
+  | GetPersistenceBulkRsp
+  | SetPersistenceRsp
   | UiResponse
   | TriggerResponse
   | ErrorRsp
@@ -48,11 +48,11 @@ async function route(
     rsp = {error: 'not found', status: 404}
   } else {
     switch (endpoint) {
-      case Endpoint.GetCounter:
-        rsp = await routeGetCounter()
+      case Endpoint.GetPersistenceBulk:
+        rsp = await routeGetPersistenceBulk()
         break
-      case Endpoint.IncCounter:
-        rsp = await routeInc(reqMsg)
+      case Endpoint.SetPersistence:
+        rsp = await routeSetPersistence(reqMsg)
         break
       case Endpoint.OnMenuNewPost:
         rsp = await routeMenuNewPost()
@@ -70,17 +70,21 @@ async function route(
   writeJson<PartialJsonValue>('status' in rsp ? rsp.status : 200, rsp, rspMsg)
 }
 
-async function routeGetCounter(): Promise<GetCounterRsp> {
-  const t3 = context.postId
-  if (!t3) throw Error('no t3')
-  return {count: await dbGetCounter(t3)}
+async function routeGetPersistenceBulk(): Promise<GetPersistenceBulkRsp> {
+  const username = await dbGetUsername()
+  return {values: await dbGetPersistenceBulk(username)}
 }
 
-async function routeInc(reqMsg: IncomingMessage): Promise<IncCounterRsp> {
-  const t3 = context.postId
-  if (!t3) throw Error('no t3')
-  const req = await readJson<IncCounterReq>(reqMsg)
-  return {count: await dbIncCounter(t3, req.amount)}
+async function routeSetPersistence(
+  reqMsg: IncomingMessage,
+): Promise<SetPersistenceRsp | ErrorRsp> {
+  const req = await readJson<SetPersistenceReq>(reqMsg)
+  if (!req.key || req.value === undefined) {
+    return {error: 'key and value required', status: 400}
+  }
+  const username = await dbGetUsername()
+  await dbSetPersistence(username, req.key, req.value)
+  return {ok: true}
 }
 
 async function routeMenuNewPost(): Promise<UiResponse> {

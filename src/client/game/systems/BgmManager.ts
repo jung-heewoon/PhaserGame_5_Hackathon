@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { SOUND_KEYS } from '../assets/SoundAssets.ts';
 import { AUDIO_CONFIG, type BossBgmSegment } from '../config/AudioConfig.ts';
 import type { BossType } from '../config/BossConfig.ts';
-import { gamePersistence } from '../platform/crazygames/GamePersistence.ts';
+import {gamePersistence} from '../platform/reddit/RedditPersistence.ts';
 import type { RunFreezeReason } from './RunSession.ts';
 
 type BgmMode = 'combat' | 'boss' | 'gameOverSting' | 'postGameOver' | 'stopped';

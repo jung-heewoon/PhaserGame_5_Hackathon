@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hell Dice Shooter</title>
+  </head>
+  <body>
+    <div id="game-shell">
+      <div id="app"></div>
+      <div id="doom-hud-layer">
+        <div id="run-hud" class="doom-hud">
+          <div
+            id="gun-view-layer"
+            class="doom-hud__gun-view"
+            aria-hidden="true"
+          >
+            <div
+              id="gun-muzzle-single"
+              class="gun-muzzle gun-muzzle--single"
+              aria-hidden="true"
+            ></div>
+            <div
+              id="gun-muzzle-dual-l"
+              class="gun-muzzle gun-muzzle--dual-l"
+              aria-hidden="true"
+            ></div>
+            <div
+              id="gun-muzzle-dual-r"
+              class="gun-muzzle gun-muzzle--dual-r"
+              aria-hidden="true"
+            ></div>
+            <img id="gun-view-single" class="gun-view__single" alt="">
+            <img
+              id="gun-view-dual-l"
+              class="gun-view__dual gun-view__dual--l"
+              alt=""
+            >
+            <img
+              id="gun-view-dual-r"
+              class="gun-view__dual gun-view__dual--r"
+              alt=""
+            >
+            <img
+              id="gun-view-nuclear-hand"
+              class="gun-view__nuclear gun-view__nuclear--hand"
+              alt=""
+            >
+            <img
+              id="gun-view-nuclear-missile"
+              class="gun-view__nuclear gun-view__nuclear--missile"
+              alt=""
+            >
+          </div>
+          <div class="doom-hud__score-stack">
+            <div class="doom-hud__score">
+              <span class="doom-label" data-i18n="hud.score">SCORE</span>
+              <span id="hud-score" class="doom-value">0</span>
+            </div>
+            <div id="combo-hud" class="combo-hud hidden" aria-hidden="true">
+              <div class="combo-hud__row">
+                <span class="combo-hud__label" data-i18n="hud.combo"
+                  >COMBO!</span
+                >
+                <span id="combo-mult" class="combo-hud__mult">x1.0</span>
+              </div>
+              <div class="combo-hud__gauge-track">
+                <div id="combo-gauge-fill" class="combo-hud__gauge-fill"></div>
+              </div>
+            </div>
+          </div>
+          <div class="doom-hud__health">
+            <div
+              id="hud-hearts"
+              class="doom-hearts"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="3"
+              aria-valuenow="3"
+              aria-label="Health"
+            ></div>
+          </div>
+          <div class="doom-hud__topright">
+            <div class="doom-hud__dice" aria-label="Dice">
+              <div
+                id="hud-dice-icon"
+                class="doom-hud__dice-icon"
+                aria-hidden="true"
+              ></div>
+              <span id="hud-dice-count" class="doom-hud__dice-count">5</span>
+            </div>
+            <div class="doom-hud__coins" aria-label="Coins">
+              <div
+                id="hud-coin-icon"
+                class="doom-hud__coin-icon"
+                aria-hidden="true"
+              ></div>
+              <span id="hud-coin-count" class="doom-hud__coin-count">0</span>
+            </div>
+          </div>
+          <div class="doom-hud__weapon-info">
+            <div
+              id="hud-weapon-icon"
+              class="doom-hud__weapon-icon"
+              aria-hidden="true"
+            ></div>
+            <div class="doom-hud__weapon-meta">
+              <span id="hud-weapon-name" class="doom-hud__weapon-name"
+                >DEFAULT PISTOL</span
+              >
+              <span id="hud-ammo" class="doom-hud__weapon-ammo">∞</span>
+            </div>
+          </div>
+        </div>
+        <div id="yatzy-modal" class="doom-modal doom-modal--yatzy hidden">
+          <div
+            id="yatzy-toast-layer"
+            class="yz-toast-layer"
+            aria-live="polite"
+          ></div>
+          <div class="yz-stage">
+            <div class="yz-title-row">
+              <span class="yz-title-row__side" aria-hidden="true"></span>
+              <h2 class="yz-title" data-i18n="yatzy.title">DICE POKER TIME</h2>
+              <button
+                id="yatzy-tutorial-tip-btn"
+                type="button"
+                class="yz-tutorial-tip hidden"
+                aria-label="Dice poker help"
+                data-i18n-aria="tutorial.tip_aria"
+              >
+                ?
+              </button>
+            </div>
+            <div class="doom-modal__panel doom-modal__panel--yatzy">
+              <div class="yz-body">
+                <div class="yz-main">
+                  <p id="yatzy-hand-label" class="doom-modal__hand"></p>
+                  <div id="yatzy-weapon-info" class="yz-weapon">
+                    <div
+                      id="yatzy-weapon-icon"
+                      class="yz-weapon__icon"
+                      aria-hidden="true"
+                    ></div>
+                    <div class="yz-weapon__meta">
+                      <div id="yatzy-weapon-name" class="yz-weapon__name"></div>
+                      <div class="yz-weapon__stats">
+                        <span class="yz-weapon__stat">
+                          <span class="doom-label" data-i18n="yatzy.ammo"
+                            >AMMO</span
+                          >
+                          <span
+                            id="yatzy-weapon-ammo"
+                            class="yz-weapon__stat-val"
+                            >-</span
+                          >
+                        </span>
+                        <span class="yz-weapon__stat">
+                          <span class="doom-label" data-i18n="yatzy.damage"
+                            >DMG</span
+                          >
+                          <span
+                            id="yatzy-weapon-damage"
+                            class="yz-weapon__stat-val"
+                            >-</span
+                          >
+                        </span>
+                      </div>
+                      <div
+                        id="yatzy-weapon-summary"
+                        class="yz-weapon__summary"
+                      ></div>
+                    </div>
+                  </div>
+                  <div id="yatzy-dice-row" class="yz-dice-row"></div>
+                  <p
+                    id="yatzy-reroll-cost"
+                    class="yz-reroll-cost-display"
+                    aria-live="polite"
+                  ></p>
+                  <div class="yz-actions">
+                    <button
+                      id="yatzy-reroll-btn"
+                      type="button"
+                      class="doom-btn doom-btn--reroll"
+                    >
+                      <span
+                        class="yz-reroll-btn__label"
+                        data-i18n="yatzy.reroll"
+                        >REROLL</span
+                      >
+                      <span id="yatzy-rolls-left" class="yz-reroll-btn__count"
+                        >2</span
+                      >
+                    </button>
+                    <button
+                      id="yatzy-equip-btn"
+                      type="button"
+                      class="doom-btn"
+                      data-i18n="yatzy.equip"
+                    >
+                      EQUIP
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- YATZY-TEST-PANEL: START (임시 테스트 UI — 재활성: class에서 hidden 제거) -->
+          <div id="yatzy-test-panel" class="yz-test hidden">
+            <span class="yz-test__title" data-i18n="yatzy.test_panel"
+              >TEST</span
+            >
+            <label class="yz-test__row" for="yatzy-weapon-picker">
+              <span class="doom-label" data-i18n="yatzy.test_weapon"
+                >TEST WEAPON</span
+              >
+              <select id="yatzy-weapon-picker" class="doom-select"></select>
+            </label>
+          </div>
+          <!-- YATZY-TEST-PANEL: END -->
+        </div>
+        <div id="settings-modal" class="doom-modal doom-modal--settings hidden">
+          <div
+            class="doom-modal__panel doom-settings-panel"
+            role="dialog"
+            aria-labelledby="settings-modal-title"
+          >
+            <div class="doom-settings-panel__title-row">
+              <span
+                class="doom-settings-panel__title-side"
+                aria-hidden="true"
+              ></span>
+              <h2
+                id="settings-modal-title"
+                class="doom-modal__title doom-settings-panel__title"
+                data-i18n="settings.title"
+              >
+                SETTINGS
+              </h2>
+              <button
+                id="settings-tutorial-tip-btn"
+                type="button"
+                class="doom-settings-tutorial-tip"
+                aria-label="Help"
+                data-i18n-aria="tutorial.tip_aria"
+              >
+                ?
+              </button>
+            </div>
+            <label class="doom-settings-row" for="settings-language">
+              <span class="doom-label" data-i18n="settings.language"
+                >LANGUAGE</span
+              >
+              <select
+                id="settings-language"
+                class="doom-select doom-settings-select"
+              >
+                <option value="ko" selected data-i18n="settings.lang.ko">
+                  한국어
+                </option>
+                <option value="en" data-i18n="settings.lang.en">English</option>
+              </select>
+            </label>
+            <div class="doom-settings-volume-block">
+              <label
+                class="doom-settings-row doom-settings-row--volume"
+                for="settings-bgm-volume"
+              >
+                <span class="doom-label" data-i18n="settings.bgm">BGM</span>
+                <div class="doom-volume-bar">
+                  <div
+                    id="settings-bgm-fill"
+                    class="doom-volume-bar__fill"
+                  ></div>
+                  <input
+                    id="settings-bgm-volume"
+                    class="doom-volume-bar__input"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="60"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="60"
+                  >
+                </div>
+              </label>
+              <label
+                class="doom-settings-row doom-settings-row--volume"
+                for="settings-sfx-volume"
+              >
+                <span class="doom-label" data-i18n="settings.sfx">SFX</span>
+                <div class="doom-volume-bar">
+                  <div
+                    id="settings-sfx-fill"
+                    class="doom-volume-bar__fill"
+                  ></div>
+                  <input
+                    id="settings-sfx-volume"
+                    class="doom-volume-bar__input"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="60"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="60"
+                  >
+                </div>
+              </label>
+            </div>
+            <button
+              id="settings-close-btn"
+              type="button"
+              class="doom-btn doom-settings-panel__close"
+              data-i18n="settings.close"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+        <div id="doom-toast" class="doom-toast hidden"></div>
+        <div
+          id="player-damage-flash"
+          class="player-damage-flash"
+          aria-hidden="true"
+        ></div>
+        <div id="frozen-overlay" class="frozen-overlay" aria-hidden="true">
+          <span
+            id="frozen-overlay-label"
+            class="frozen-overlay__label"
+            data-i18n="status.frozen"
+            >얼어버림</span
+          >
+        </div>
+        <div
+          id="boss-warning-overlay"
+          class="boss-warning-overlay hidden"
+          aria-hidden="true"
+        >
+          <div class="boss-warning-overlay__row">
+            <div
+              id="boss-warning-bang-l"
+              class="boss-warning-bang"
+              aria-hidden="true"
+            ></div>
+            <div
+              id="boss-warning-bar"
+              class="boss-warning-bar"
+              aria-hidden="true"
+            ></div>
+            <div
+              id="boss-warning-bang-r"
+              class="boss-warning-bang"
+              aria-hidden="true"
+            ></div>
+          </div>
+        </div>
+        <div id="floating-damage-layer" aria-hidden="true"></div>
+        <div id="combo-settle-layer" aria-hidden="true"></div>
+        <div id="coin-fly-layer" aria-hidden="true"></div>
+        <div id="pickup-fly-layer" aria-hidden="true"></div>
+        <div id="gameover-modal" class="doom-modal hidden">
+          <div class="doom-modal__panel doom-modal__panel--gameover">
+            <h2
+              class="doom-modal__title doom-modal__title--gameover"
+              data-i18n="gameover.title"
+            >
+              GAME OVER
+            </h2>
+            <div id="gameover-hiscore" class="doom-gameover-hiscore">
+              <div class="doom-gameover-hiscore__icon" aria-hidden="true">
+                <svg
+                  class="doom-gameover-hiscore__crown"
+                  viewBox="0 0 32 28"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M4 22h24v3H4v-3zm2.2-14 3.4 6.2 5.6-9.4 5.6 9.4 3.4-6.2L28 22H4L6.2 8z"
+                  />
+                </svg>
+              </div>
+              <div class="doom-gameover-hiscore__meta">
+                <span
+                  class="doom-gameover-hiscore__label"
+                  data-i18n="gameover.highScore"
+                  >HIGH SCORE</span
+                >
+                <span
+                  id="gameover-new-record"
+                  class="doom-gameover-hiscore__badge hidden"
+                  data-i18n="gameover.newRecord"
+                  >NEW!</span
+                >
+              </div>
+              <span
+                id="gameover-high-score"
+                class="doom-gameover-hiscore__value"
+                >0</span
+              >
+            </div>
+            <div class="doom-result">
+              <div class="doom-result__row">
+                <span class="doom-result__label" data-i18n="gameover.score"
+                  >SCORE</span
+                >
+                <span
+                  id="gameover-score"
+                  class="doom-result__value doom-result__value--score"
+                  >0</span
+                >
+              </div>
+              <div class="doom-result__row">
+                <span class="doom-result__label" data-i18n="gameover.time"
+                  >TIME</span
+                >
+                <span
+                  id="gameover-time"
+                  class="doom-result__value doom-result__value--time"
+                  >0:00</span
+                >
+              </div>
+              <div class="doom-result__row">
+                <span class="doom-result__label" data-i18n="gameover.kills"
+                  >KILLS</span
+                >
+                <span
+                  id="gameover-kills"
+                  class="doom-result__value doom-result__value--kills"
+                  >0</span
+                >
+              </div>
+              <div class="doom-result__row doom-result__row--coins">
+                <span class="doom-result__label" data-i18n="gameover.coins"
+                  >COINS</span
+                >
+                <span class="doom-result__value doom-result__value--coins">
+                  <span
+                    id="gameover-coin-icon"
+                    class="doom-result__coin-icon"
+                    aria-hidden="true"
+                  ></span>
+                  <span id="gameover-coins">0</span>
+                </span>
+              </div>
+            </div>
+            <div class="doom-modal__actions">
+              <button
+                id="gameover-retry-btn"
+                type="button"
+                class="doom-btn"
+                data-i18n="gameover.retry"
+              >
+                RETRY
+              </button>
+              <button
+                id="gameover-upgrade-btn"
+                type="button"
+                class="doom-btn doom-btn--upgrade"
+                data-i18n="gameover.upgrade"
+              >
+                UPGRADE
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="boss-chest-modal" class="doom-modal boss-chest-modal hidden">
+          <div
+            id="boss-chest-panel"
+            class="doom-modal__panel boss-chest-modal__panel"
+          >
+            <h2
+              class="doom-modal__title boss-chest-modal__title"
+              data-i18n="bossChest.title"
+            >
+              TREASURE!
+            </h2>
+            <div class="boss-chest-modal__stage">
+              <div
+                id="boss-chest-vfx"
+                class="boss-chest-modal__vfx"
+                aria-hidden="true"
+              ></div>
+              <div id="boss-chest-actor" class="boss-chest-modal__actor">
+                <div
+                  id="boss-chest-flash"
+                  class="boss-chest-modal__flash"
+                  aria-hidden="true"
+                ></div>
+                <div
+                  id="boss-chest-sprite"
+                  class="boss-chest-modal__chest"
+                  aria-hidden="true"
+                ></div>
+              </div>
+            </div>
+            <div id="boss-chest-reward" class="boss-chest-modal__reward">
+              <p id="boss-chest-tier" class="boss-chest-modal__tier-label"></p>
+              <p id="boss-chest-gold" class="boss-chest-modal__gold"></p>
+              <p id="boss-chest-dice" class="boss-chest-modal__dice"></p>
+            </div>
+            <button
+              id="boss-chest-close-btn"
+              type="button"
+              class="doom-btn boss-chest-modal__close"
+              data-i18n="bossChest.close"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+        <button
+          id="settings-open-btn"
+          type="button"
+          class="doom-hud__settings-btn"
+          aria-label="Settings"
+          title="Settings"
+          data-i18n-aria="settings.open"
+          data-i18n-title="settings.open"
+        >
+          <span class="doom-hud__settings-icon" aria-hidden="true">⚙</span>
+        </button>
+        <div id="tutorial-modal" class="doom-modal doom-modal--tutorial hidden">
+          <div
+            id="tutorial-panel"
+            class="tutorial-panel"
+            role="dialog"
+            aria-labelledby="tutorial-title"
+          >
+            <h2 id="tutorial-title" class="tutorial-panel__title"></h2>
+            <div class="tutorial-panel__body">
+              <div id="tutorial-page-controls-pc" class="tutorial-page">
+                <div class="tutorial-section">
+                  <h3
+                    class="tutorial-section__title"
+                    data-i18n="tutorial.controls.move_title"
+                  >
+                    MOVE
+                  </h3>
+                  <div class="tutorial-keys">
+                    <span class="tutorial-key">A</span>
+                    <span class="tutorial-key">D</span>
+                    <span
+                      class="tutorial-key-sep"
+                      data-i18n="tutorial.controls.or"
+                      >or</span
+                    >
+                    <span class="tutorial-key">←</span>
+                    <span class="tutorial-key">→</span>
+                  </div>
+                  <p
+                    class="tutorial-section__desc"
+                    data-i18n="tutorial.controls.move_desc"
+                  ></p>
+                </div>
+                <div class="tutorial-section">
+                  <h3
+                    class="tutorial-section__title"
+                    data-i18n="tutorial.controls.fire_title"
+                  >
+                    FIRE
+                  </h3>
+                  <div class="tutorial-fire-row">
+                    <span class="tutorial-key tutorial-key--wide">SPACE</span>
+                    <span
+                      class="tutorial-key-sep"
+                      data-i18n="tutorial.controls.or"
+                      >or</span
+                    >
+                    <span
+                      class="tutorial-key"
+                      data-i18n="tutorial.controls.mouse"
+                      >CLICK</span
+                    >
+                    <img
+                      id="tutorial-pistol-icon"
+                      class="tutorial-gun-icon"
+                      alt=""
+                    >
+                  </div>
+                  <p
+                    class="tutorial-section__desc"
+                    data-i18n="tutorial.controls.fire_desc"
+                  ></p>
+                </div>
+                <p
+                  class="tutorial-note"
+                  data-i18n="tutorial.controls.auto_run"
+                ></p>
+              </div>
+              <div id="tutorial-page-controls-mobile" class="tutorial-page">
+                <div class="tutorial-section">
+                  <div class="tutorial-mobile-layout">
+                    <div class="tutorial-mobile-mock__move">
+                      <span class="tutorial-mobile-mock__btn">◀</span>
+                      <span class="tutorial-mobile-mock__btn">▶</span>
+                    </div>
+                    <div class="tutorial-mobile-mock__fire">
+                      <img
+                        id="tutorial-mobile-fire-icon"
+                        class="tutorial-mobile-mock__fire-icon"
+                        alt=""
+                      >
+                    </div>
+                  </div>
+                  <p
+                    class="tutorial-section__desc"
+                    data-i18n="tutorial.controls.mobile.move_desc"
+                  ></p>
+                  <p
+                    class="tutorial-section__desc"
+                    data-i18n="tutorial.controls.mobile.fire_desc"
+                  ></p>
+                </div>
+                <p
+                  class="tutorial-note"
+                  data-i18n="tutorial.controls.auto_run"
+                ></p>
+              </div>
+              <div id="tutorial-page-items" class="tutorial-page">
+                <div class="tutorial-items-grid">
+                  <div class="tutorial-item-card">
+                    <div
+                      id="tutorial-dice-pickup-icon"
+                      class="tutorial-item-card__icon tutorial-item-card__icon--dice"
+                      aria-hidden="true"
+                    ></div>
+                    <h3
+                      class="tutorial-item-card__title"
+                      data-i18n="tutorial.items.dice_title"
+                    >
+                      DICE
+                    </h3>
+                    <p
+                      class="tutorial-item-card__desc"
+                      data-i18n="tutorial.items.dice_desc"
+                    ></p>
+                  </div>
+                  <div class="tutorial-item-card">
+                    <img
+                      id="tutorial-heart-icon"
+                      class="tutorial-item-card__icon"
+                      alt=""
+                    >
+                    <h3
+                      class="tutorial-item-card__title"
+                      data-i18n="tutorial.items.heart_title"
+                    >
+                      HEART
+                    </h3>
+                    <p
+                      class="tutorial-item-card__desc"
+                      data-i18n="tutorial.items.heart_desc"
+                    ></p>
+                  </div>
+                  <div class="tutorial-item-card">
+                    <img
+                      id="tutorial-bullet-icon"
+                      class="tutorial-item-card__icon"
+                      alt=""
+                    >
+                    <h3
+                      class="tutorial-item-card__title"
+                      data-i18n="tutorial.items.bullet_title"
+                    >
+                      AMMO
+                    </h3>
+                    <p
+                      class="tutorial-item-card__desc"
+                      data-i18n="tutorial.items.bullet_desc"
+                    ></p>
+                  </div>
+                </div>
+                <p
+                  class="tutorial-note"
+                  data-i18n="tutorial.items.fly_note"
+                ></p>
+              </div>
+              <div id="tutorial-page-yatzy" class="tutorial-page">
+                <div class="tutorial-yatzy-steps">
+                  <div class="tutorial-yatzy-step">
+                    <span class="tutorial-yatzy-step__num">1</span>
+                    <p
+                      class="tutorial-yatzy-step__text"
+                      data-i18n="tutorial.yatzy.step1"
+                    ></p>
+                  </div>
+                  <div
+                    id="tutorial-yatzy-dice-row"
+                    class="tutorial-yatzy-dice-row"
+                    aria-hidden="true"
+                  ></div>
+                  <div class="tutorial-yatzy-step">
+                    <span class="tutorial-yatzy-step__num">2</span>
+                    <p
+                      class="tutorial-yatzy-step__text"
+                      data-i18n="tutorial.yatzy.step2"
+                    ></p>
+                  </div>
+                  <div class="tutorial-yatzy-step">
+                    <span class="tutorial-yatzy-step__num">3</span>
+                    <p
+                      class="tutorial-yatzy-step__text"
+                      data-i18n="tutorial.yatzy.step3"
+                    ></p>
+                  </div>
+                  <div class="tutorial-yatzy-step">
+                    <span class="tutorial-yatzy-step__num">4</span>
+                    <p
+                      class="tutorial-yatzy-step__text"
+                      data-i18n="tutorial.yatzy.step4"
+                    ></p>
+                  </div>
+                </div>
+              </div>
+              <div id="tutorial-page-yatzy-hands" class="tutorial-page">
+                <p
+                  class="tutorial-yatzy-hands-intro"
+                  data-i18n="tutorial.yatzy.hands.intro"
+                ></p>
+                <div
+                  id="tutorial-yatzy-hands-grid"
+                  class="tutorial-yatzy-hands-grid"
+                  aria-hidden="true"
+                ></div>
+              </div>
+            </div>
+            <p id="tutorial-tap-hint" class="tutorial-tap-hint hidden"></p>
+            <div id="tutorial-nav" class="tutorial-nav hidden">
+              <button
+                id="tutorial-prev-btn"
+                type="button"
+                class="doom-btn"
+                data-i18n="tutorial.nav.prev"
+              >
+                PREV
+              </button>
+              <span id="tutorial-page-indicator" class="tutorial-nav__page"
+                >1/2</span
+              >
+              <button
+                id="tutorial-next-btn"
+                type="button"
+                class="doom-btn"
+                data-i18n="tutorial.nav.next"
+              >
+                NEXT
+              </button>
+              <button
+                id="tutorial-close-btn"
+                type="button"
+                class="doom-btn"
+                data-i18n="tutorial.nav.close"
+              >
+                CLOSE
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="upgrade-modal" class="doom-modal doom-modal--upgrade hidden">
+          <div class="doom-upgrade">
+            <div class="doom-modal__panel doom-modal__panel--upgrade">
+              <div class="doom-upgrade__header">
+                <h2
+                  class="doom-modal__title doom-modal__title--upgrade"
+                  data-i18n="upgrade.title"
+                >
+                  UPGRADE
+                </h2>
+                <div class="doom-upgrade__wallet">
+                  <span
+                    id="upgrade-wallet-icon"
+                    class="doom-upgrade__wallet-icon"
+                    aria-hidden="true"
+                  ></span>
+                  <span
+                    id="upgrade-wallet-count"
+                    class="doom-upgrade__wallet-count"
+                    >0</span
+                  >
+                </div>
+              </div>
+              <div id="upgrade-list" class="doom-upgrade__list"></div>
+              <button
+                id="upgrade-close-btn"
+                type="button"
+                class="doom-btn doom-upgrade__close"
+                data-i18n="upgrade.close"
+              >
+                CLOSE
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        id="boot-curtain"
+        class="boot-curtain"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <div class="boot-curtain__spinner" aria-hidden="true"></div>
+        <p class="boot-curtain__label">LOADING</p>
+      </div>
+    </div>
+    <script type="module" src="./game.ts"></script>
+  </body>
+</html>

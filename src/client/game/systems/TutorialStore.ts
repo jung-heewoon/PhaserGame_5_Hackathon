@@ -1,5 +1,5 @@
 import { TUTORIAL_CONFIG } from '../config/TutorialConfig.ts';
-import { gamePersistence } from '../platform/crazygames/GamePersistence.ts';
+import {gamePersistence} from '../platform/reddit/RedditPersistence.ts';
 
 const SEEN_VALUE = '1';
 

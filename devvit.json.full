@@ -1,0 +1,36 @@
+{
+    "$schema":  "https://developers.reddit.com/schema/config-file.v1.json",
+    "name":  "hell-dice-shooter",
+    "post":  {
+                 "dir":  "dist/client",
+                 "entrypoints":  {
+                                     "default":  {
+                                                     "inline":  true,
+                                                     "entry":  "splash.html"
+                                                 },
+                                     "game":  {
+                                                  "entry":  "game.html"
+                                              }
+                                 }
+             },
+    "menu":  {
+                 "items":  [
+                               {
+                                   "label":  "[hell-dice-shooter] New Post",
+                                   "description":  "Create a new hell-dice-shooter post.",
+                                   "location":  "subreddit",
+                                   "endpoint":  "/internal/on/menu/new-post"
+                               }
+                           ]
+             },
+    "triggers":  {
+                     "onAppInstall":  "/internal/on/app/install"
+                 },
+    "scripts":  {
+                    "build":  "node scripts/build.mjs",
+                    "dev":  "node scripts/watch.mjs"
+                },
+    "dev":  {
+                "subreddit":  "hell_dice_shooter_dev"
+            }
+}

@@ -1,5 +1,5 @@
 import { HIGH_SCORE_STORAGE_KEY } from '../config/GamePersistenceConfig.ts';
-import { gamePersistence } from '../platform/crazygames/GamePersistence.ts';
+import {gamePersistence} from '../platform/reddit/RedditPersistence.ts';
 
 /** 생존 점수 최고 기록 — CrazyGames SDK.data 영속 */
 class HighScoreStoreImpl {

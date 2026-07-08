@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { AUDIO_CONFIG } from '../config/AudioConfig.ts';
 import type { WeaponId } from '../config/WeaponTable.ts';
-import { gamePersistence } from '../platform/crazygames/GamePersistence.ts';
+import {gamePersistence} from '../platform/reddit/RedditPersistence.ts';
 import {
   getOneShotSoundKey,
   SOUND_KEYS,

@@ -1,5 +1,5 @@
 import { RUN_GAME_CONFIG } from '../config/RunGameConfig.ts';
-import { crazyGamesLifecycle } from '../platform/crazygames/CrazyGamesLifecycle.ts';
+import {redditLifecycle} from '../platform/reddit/RedditLifecycle.ts';
 
 /** 게임플레이이 멈춘 이유 — null이면 질주 중 */
 export type RunFreezeReason = 'yatzy' | 'dead' | 'settings' | 'bossReward' | 'tutorial';
@@ -52,7 +52,7 @@ export class RunSession {
     const wasActive = this.freezeReason === null;
     this.freezeReason = reason;
     if (wasActive) {
-      crazyGamesLifecycle.notifyFreeze(reason);
+      redditLifecycle.notifyFreeze(reason);
     }
   }
 
@@ -61,7 +61,7 @@ export class RunSession {
     if (this.freezeReason === null) return;
     const reason = this.freezeReason;
     this.freezeReason = null;
-    crazyGamesLifecycle.notifyUnfreeze(reason);
+    redditLifecycle.notifyUnfreeze(reason);
   }
 
   /** 플레이어 사망 — 보상·야찌 등 후속 팝업 차단 */

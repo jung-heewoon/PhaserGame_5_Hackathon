@@ -110,7 +110,7 @@ import { GAME_DESIGN_HEIGHT, GAME_DESIGN_WIDTH } from '../config/GameDisplayConf
 import { publicUrl } from '../config/PublicUrl.ts';
 import { sfxManager } from '../systems/SfxManager.ts';
 import { bgmManager } from '../systems/BgmManager.ts';
-import { crazyGamesLifecycle } from '../platform/crazygames/CrazyGamesLifecycle.ts';
+import {redditLifecycle} from '../platform/reddit/RedditLifecycle.ts';
 import { dismissBootCurtain } from '../ui/BootCurtainDom.ts';
 
 export const twoPointFiveGlobalPlugin = TwoPointFivePlugin;
@@ -170,7 +170,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
   }
 
   create(): void {
-    crazyGamesLifecycle.clearGameContext();
+    redditLifecycle.clearGameContext();
     this.contextSyncAccumulatorMs = 0;
     sfxManager.init(this);
     bgmManager.init(this);
@@ -477,7 +477,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
       forceHideSettingsModal();
       forceHideTutorialModal();
       sfxManager.stopBossSuccess();
-      crazyGamesLifecycle.clearGameContext();
+      redditLifecycle.clearGameContext();
       bgmManager.enterGameOverSting();
       sfxManager.playGameOver(() => {
         if (this.session.freezeReason === 'dead') {
@@ -516,8 +516,8 @@ export class RunnerYatzyScene extends Phaser.Scene {
 
     tryStartIntroTutorial(() => {
       dismissBootCurtain();
-      crazyGamesLifecycle.notifyLoadingComplete();
-      crazyGamesLifecycle.notifyRunStart();
+      redditLifecycle.notifyLoadingComplete();
+      redditLifecycle.notifyRunStart();
     });
   }
 
@@ -559,7 +559,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
     if (this.session.playerDead) return;
     if (isBossChestModalOpen()) return;
     this.session.freeze('bossReward');
-    crazyGamesLifecycle.happytime('bossClear');
+    redditLifecycle.happytime('bossClear');
     sfxManager.playBossSuccess();
     showBossChestModal({
       onClose: (result) => {
@@ -700,7 +700,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
     this.contextSyncAccumulatorMs = 0;
 
     const weapon = this.runState.snapshot.currentWeapon;
-    crazyGamesLifecycle.setGameContext({
+    redditLifecycle.setGameContext({
       score: this.session.survivalScore,
       weapon,
       coins: this.coinSystem.coins,

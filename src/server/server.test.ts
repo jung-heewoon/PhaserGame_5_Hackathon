@@ -2,29 +2,30 @@ import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
 import type {AddressInfo, Server} from 'node:net'
 import {after, before, beforeEach, test} from 'node:test'
-import {type Context, redis, runWithContext} from '@devvit/web/server'
+import {type Context, reddit, redis, runWithContext} from '@devvit/web/server'
 import {
   Endpoint,
   type ErrorRsp,
-  type GetCounterRsp,
-  type IncCounterReq,
-  type IncCounterRsp,
+  type GetPersistenceBulkRsp,
+  type SetPersistenceReq,
+  type SetPersistenceRsp,
 } from '../shared/api.ts'
 import {onReq} from './server.ts'
 
 let server: Server
 let serverURL: string
-const redisValues = new Map<string, number>()
+const redisValues = new Map<string, string>()
 const redisGet = redis.get.bind(redis)
-const redisIncrBy = redis.incrBy.bind(redis)
+const redisSet = redis.set.bind(redis)
+const redditGetCurrentUsername = reddit.getCurrentUsername.bind(reddit)
 
 before(async () => {
-  redis.get = async key => `${redisValues.get(key) ?? 0}`
-  redis.incrBy = async (key, amount) => {
-    const value = (redisValues.get(key) ?? 0) + amount
+  redis.get = async key => redisValues.get(key) ?? undefined
+  redis.set = async (key, value) => {
     redisValues.set(key, value)
-    return value
+    return 'OK'
   }
+  reddit.getCurrentUsername = async () => 'test-user'
 
   server = createServer(async (req, rsp) => {
     await runWithContext(
@@ -32,7 +33,7 @@ before(async () => {
         appName: 'hell-dice-shooter',
         postId: 't3_123',
         userId: 't2_123',
-        username: 'username',
+        username: 'test-user',
       } as unknown as Context,
       () => onReq(req, rsp),
     )
@@ -46,7 +47,8 @@ before(async () => {
 
 after(async () => {
   redis.get = redisGet
-  redis.incrBy = redisIncrBy
+  redis.set = redisSet
+  reddit.getCurrentUsername = redditGetCurrentUsername
   if (!server.listening) return
   await new Promise<void>((resolve, reject) => {
     server.close(err => (err ? reject(err) : resolve()))
@@ -55,27 +57,32 @@ after(async () => {
 
 beforeEach(() => redisValues.clear())
 
-test('get counter', async () => {
-  const rsp = await fetch(`${serverURL}/${Endpoint.GetCounter}`)
+test('get persistence bulk', async () => {
+  redisValues.set('user:test-user:hell-dice-shooter-wallet', '42')
+  const rsp = await fetch(`${serverURL}/${Endpoint.GetPersistenceBulk}`)
   assert.equal(rsp.status, 200)
   assert.equal(rsp.headers.get('Content-Type'), 'application/json')
-  assert.deepEqual<GetCounterRsp>(await rsp.json(), {count: 0})
+  const body = (await rsp.json()) as GetPersistenceBulkRsp
+  assert.equal(body.values['hell-dice-shooter-wallet'], '42')
 })
 
-test('inc', async () => {
-  const req: IncCounterReq = {amount: 1}
-  const rsp = await fetch(`${serverURL}/${Endpoint.IncCounter}`, {
+test('set persistence', async () => {
+  const req: SetPersistenceReq = {
+    key: 'hell-dice-shooter-wallet',
+    value: '99',
+  }
+  const rsp = await fetch(`${serverURL}/${Endpoint.SetPersistence}`, {
     body: JSON.stringify(req),
     headers: {'Content-Type': 'application/json'},
     method: 'POST',
   })
   assert.equal(rsp.status, 200)
-  assert.equal(rsp.headers.get('Content-Type'), 'application/json')
-  assert.deepEqual<IncCounterRsp>(await rsp.json(), {count: 1})
+  assert.deepEqual<SetPersistenceRsp>(await rsp.json(), {ok: true})
+  assert.equal(redisValues.get('user:test-user:hell-dice-shooter-wallet'), '99')
 })
 
 test('wrong method', async () => {
-  const rsp = await fetch(`${serverURL}/${Endpoint.IncCounter}`)
+  const rsp = await fetch(`${serverURL}/${Endpoint.SetPersistence}`)
   assert.equal(rsp.status, 404)
   assert.deepEqual<ErrorRsp>(await rsp.json(), {
     error: 'not found',

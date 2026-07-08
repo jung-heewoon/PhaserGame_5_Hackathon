@@ -1,5 +1,5 @@
 import coinUrl from '../Image/UI/coin4_16x16.png';
-import { crazyGamesLifecycle } from '../platform/crazygames/CrazyGamesLifecycle.ts';
+import {redditLifecycle} from '../platform/reddit/RedditLifecycle.ts';
 import { formatRunElapsed, highScoreStore } from '../systems/HighScoreStore.ts';
 import { domUiBridge } from './DomUiBridge.ts';
 import { showUpgradeModal } from './UpgradeModalDom.ts';
@@ -75,7 +75,7 @@ export function showGameOverModal(stats: GameOverStats, onRetry: () => void): vo
   if (hiscoreEl) hiscoreEl.textContent = String(highScore);
   if (hiscoreBox) hiscoreBox.classList.toggle('doom-gameover-hiscore--new', isNewRecord);
   if (newRecordEl) newRecordEl.classList.toggle('hidden', !isNewRecord);
-  if (isNewRecord) crazyGamesLifecycle.happytime('newHighScore');
+  if (isNewRecord) redditLifecycle.happytime('newHighScore');
 
   countToken += 1;
   const myToken = countToken;

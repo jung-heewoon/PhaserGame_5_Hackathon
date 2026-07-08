@@ -1,14 +1,33 @@
-import {redis} from '@devvit/web/server'
-import type {T3} from '@devvit/web/shared'
+import {reddit, redis} from '@devvit/web/server'
+import {GAME_PERSISTENCE_KEYS} from '../shared/persistence.ts'
 
-export async function dbGetCounter(t3: T3): Promise<number> {
-  return Number((await redis.get(counterKey(t3))) ?? 0)
+export async function dbGetPersistenceBulk(
+  username: string,
+): Promise<Record<string, string>> {
+  const values: Record<string, string> = {}
+  await Promise.all(
+    GAME_PERSISTENCE_KEYS.map(async key => {
+      const value = await redis.get(persistenceKey(username, key))
+      if (value !== undefined && value !== null) {
+        values[key] = value
+      }
+    }),
+  )
+  return values
 }
 
-export async function dbIncCounter(t3: T3, amount: number): Promise<number> {
-  return redis.incrBy(counterKey(t3), amount)
+export async function dbSetPersistence(
+  username: string,
+  key: string,
+  value: string,
+): Promise<void> {
+  await redis.set(persistenceKey(username, key), value)
 }
 
-function counterKey(t3: T3): string {
-  return `count:${t3}`
+export async function dbGetUsername(): Promise<string> {
+  return (await reddit.getCurrentUsername()) ?? 'anonymous'
+}
+
+function persistenceKey(username: string, key: string): string {
+  return `user:${username}:${key}`
 }

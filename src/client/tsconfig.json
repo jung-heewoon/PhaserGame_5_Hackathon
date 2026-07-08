@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["DOM", "ES2023"],
+    "customConditions": ["browser"],
+    "noUncheckedIndexedAccess": false,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["../../node_modules/twopointfive-phaser-3/src/*"],
+      "@game/*": ["./game/*"]
+    },
+    "types": ["vite/client"]
+  },
+  "references": [{"path": "../shared/"}]
+}

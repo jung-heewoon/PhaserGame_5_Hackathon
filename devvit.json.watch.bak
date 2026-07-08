@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "hell-dice-shooter",
+  "post": {
+    "dir": "dist/client",
+    "entrypoints": {
+      "default": {
+        "inline": true,
+        "entry": "splash.html"
+      },
+      "game": {
+        "entry": "game.html"
+      }
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/watch.mjs"
+  },
+  "dev": {
+    "subreddit": "hell_dice_shooter_dev"
+  }
+}

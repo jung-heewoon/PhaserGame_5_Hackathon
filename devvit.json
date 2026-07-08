@@ -2,8 +2,10 @@
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
   "name": "hell-dice-shooter",
   "post": {
+    "dir": "dist/client",
     "entrypoints": {
       "default": {
+        "inline": true,
         "entry": "splash.html"
       },
       "game": {
@@ -11,7 +13,10 @@
       }
     }
   },
-  "server": {},
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
   "menu": {
     "items": [
       {
@@ -26,7 +31,8 @@
     "onAppInstall": "/internal/on/app/install"
   },
   "scripts": {
-    "dev": "npm run watch"
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/watch-server.mjs"
   },
   "dev": {
     "subreddit": "hell_dice_shooter_dev"

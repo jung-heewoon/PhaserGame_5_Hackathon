@@ -4,7 +4,7 @@ import {
   UPGRADE_STORAGE_KEY,
   WALLET_STORAGE_KEY,
 } from '../config/UpgradeConfig.ts';
-import { gamePersistence } from '../platform/crazygames/GamePersistence.ts';
+import {gamePersistence} from '../platform/reddit/RedditPersistence.ts';
 
 type LevelMap = Partial<Record<WeaponId, number>>;
 

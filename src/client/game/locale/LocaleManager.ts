@@ -1,13 +1,19 @@
 import type { HandId, WeaponId } from '../config/WeaponTable.ts';
 import { LOCALE_STORAGE_KEY } from '../config/GamePersistenceConfig.ts';
-import { publicUrl } from '../config/PublicUrl.ts';
-import { crazyGamesBridge } from '../platform/crazygames/CrazyGamesBridge.ts';
-import { gamePersistence } from '../platform/crazygames/GamePersistence.ts';
-import { parseLocaleCsv } from './CsvParser.ts';
+import {publicUrl} from '../config/PublicUrl.ts';
+import {gamePersistence} from '../platform/reddit/RedditPersistence.ts';
+import {parseLocaleCsv} from './CsvParser.ts';
 
 export type LocaleId = 'ko' | 'en';
 
 const LOCALE_URL = publicUrl('locale/strings.csv');
+
+function resolveLocaleFallback(): LocaleId | null {
+  const lang = navigator.language?.toLowerCase() ?? '';
+  if (lang.startsWith('ko')) return 'ko';
+  if (lang.startsWith('en')) return 'en';
+  return null;
+}
 
 type LocaleTable = Map<string, { ko: string; en: string }>;
 
@@ -45,7 +51,7 @@ class LocaleManagerImpl {
   /** persistence hydrate 이후 호출 — 저장값 또는 SDK locale fallback 적용 */
   applyHydratedLocale(): void {
     const stored = this.readStoredLocale();
-    const fallback = crazyGamesBridge.resolveLocaleFallback();
+    const fallback = resolveLocaleFallback();
     this.locale = stored ?? fallback ?? 'ko';
     this.hydrated = true;
     document.documentElement.lang = this.locale;
