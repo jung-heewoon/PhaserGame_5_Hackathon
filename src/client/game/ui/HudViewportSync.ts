@@ -1,43 +1,55 @@
-import Phaser from 'phaser';
-import { GAME_DESIGN_HEIGHT, GAME_DESIGN_WIDTH } from '../config/GameDisplayConfig.ts';
+import Phaser from 'phaser'
+import {GAME_DESIGN_HEIGHT, GAME_DESIGN_WIDTH} from '../config/GameDisplayConfig.ts'
+import {refreshPhaserScaleLayout} from '../core/patchPhaserScaleForCssRotate.ts'
 
-/** DOM HUD를 Phaser 캔버스 bounds·스케일과 1:1 동기화 */
+/** DOM HUD를 Phaser 캔버스와 1:1 동기화 (#game-shell 로컬, CSS rotate 무시) */
 export function bindHudViewportSync(game: Phaser.Game): () => void {
-  const hud = document.getElementById('doom-hud-layer');
-  const shell = document.getElementById('game-shell');
-  if (!hud || !shell) return () => {};
+  const hud = document.getElementById('doom-hud-layer')
+  const shell = document.getElementById('game-shell')
+  const app = document.getElementById('app')
+  if (!hud || !shell || !app) return () => {}
 
   const sync = (): void => {
-    const canvas = game.canvas;
-    if (!canvas.isConnected) return;
+    const canvas = game.canvas
+    if (!canvas.isConnected) return
 
-    const shellRect = shell.getBoundingClientRect();
-    const canvasRect = canvas.getBoundingClientRect();
-    if (canvasRect.width <= 0 || canvasRect.height <= 0) return;
+    const canvasW = canvas.offsetWidth
+    const canvasH = canvas.offsetHeight
+    if (canvasW <= 0 || canvasH <= 0) return
 
-    const scale = canvasRect.width / GAME_DESIGN_WIDTH;
+    // #app 이 flex center이므로 canvas offset은 app 기준 → app의을 shell에 더함
+    const scale = canvasW / GAME_DESIGN_WIDTH
+    const left = app.offsetLeft + canvas.offsetLeft
+    const top = app.offsetTop + canvas.offsetTop
 
-    hud.style.left = `${canvasRect.left - shellRect.left}px`;
-    hud.style.top = `${canvasRect.top - shellRect.top}px`;
-    hud.style.width = `${GAME_DESIGN_WIDTH}px`;
-    hud.style.height = `${GAME_DESIGN_HEIGHT}px`;
-    hud.style.transformOrigin = 'top left';
-    hud.style.transform = `scale(${scale})`;
-  };
+    hud.style.left = `${left}px`
+    hud.style.top = `${top}px`
+    hud.style.width = `${GAME_DESIGN_WIDTH}px`
+    hud.style.height = `${GAME_DESIGN_HEIGHT}px`
+    hud.style.transformOrigin = 'top left'
+    hud.style.transform = `scale(${scale})`
+  }
 
-  game.scale.on('resize', sync);
-  window.addEventListener('resize', sync);
+  const refreshScaleAndHud = (): void => {
+    refreshPhaserScaleLayout(game)
+    requestAnimationFrame(sync)
+  }
 
-  const observer = new ResizeObserver(sync);
-  observer.observe(shell);
-  observer.observe(game.canvas);
+  game.scale.on('resize', sync)
+  window.addEventListener('resize', refreshScaleAndHud)
+  window.addEventListener('orientationchange', refreshScaleAndHud)
 
-  sync();
-  requestAnimationFrame(sync);
+  const observer = new ResizeObserver(refreshScaleAndHud)
+  observer.observe(shell)
+  observer.observe(app)
+
+  refreshScaleAndHud()
+  requestAnimationFrame(sync)
 
   return () => {
-    game.scale.off('resize', sync);
-    window.removeEventListener('resize', sync);
-    observer.disconnect();
-  };
+    game.scale.off('resize', sync)
+    window.removeEventListener('resize', refreshScaleAndHud)
+    window.removeEventListener('orientationchange', refreshScaleAndHud)
+    observer.disconnect()
+  }
 }

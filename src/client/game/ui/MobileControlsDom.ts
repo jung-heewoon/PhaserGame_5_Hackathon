@@ -84,8 +84,11 @@ class MobileControls {
   }
 
   /**
-   * 좌/우 이동 — 확장 히트존 전체를 좌/우 반으로 나눠 판별.
-   * 버튼 사이 gap·상단 여유도 터치 가능, 드래그로 좌↔우 전환.
+   * 좌/우 이동 — 확장 히트존 + 시각 버튼 중심 기준 판별.
+   *
+   * CSS rotate(90deg) 이후 getBoundingClientRect AABB의 clientX 중간 분할은
+   * 게임 좌/우축과 어긋난다(화면에서는 세로축). 발사 버튼은 요소 단위라 정상.
+   * → 터치 지점에서 각 버튼 스크린 중심까지 거리로 좌/우를 고른다.
    */
   private bindMoveGroup(
     hitArea: HTMLElement,
@@ -106,10 +109,16 @@ class MobileControls {
       return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
     };
 
-    const sideFromX = (clientX: number): 'left' | 'right' => {
-      const r = hitArea.getBoundingClientRect();
-      const mid = r.left + r.width / 2;
-      return clientX < mid ? 'left' : 'right';
+    const sideFromPoint = (clientX: number, clientY: number): 'left' | 'right' => {
+      const lr = leftBtn.getBoundingClientRect();
+      const rr = rightBtn.getBoundingClientRect();
+      const lx = lr.left + lr.width / 2;
+      const ly = lr.top + lr.height / 2;
+      const rx = rr.left + rr.width / 2;
+      const ry = rr.top + rr.height / 2;
+      const distL = (clientX - lx) ** 2 + (clientY - ly) ** 2;
+      const distR = (clientX - rx) ** 2 + (clientY - ry) ** 2;
+      return distL <= distR ? 'left' : 'right';
     };
 
     const press = (e: PointerEvent): void => {
@@ -121,13 +130,13 @@ class MobileControls {
       } catch {
         /* 캡처 실패는 무시 */
       }
-      applySide(sideFromX(e.clientX));
+      applySide(sideFromPoint(e.clientX, e.clientY));
     };
 
     const move = (e: PointerEvent): void => {
       if (activePointerId !== e.pointerId) return;
       e.preventDefault();
-      applySide(sideFromX(e.clientX));
+      applySide(sideFromPoint(e.clientX, e.clientY));
     };
 
     const release = (e: PointerEvent): void => {

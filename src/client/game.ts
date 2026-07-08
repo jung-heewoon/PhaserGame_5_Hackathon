@@ -10,8 +10,12 @@ import '@game/ui/upgrade-modal.css'
 import '@game/ui/yatzy-modal.css'
 import '@game/ui/mobile-controls.css'
 import '@game/ui/tutorial-modal.css'
-import {applyViewportLayout} from '@game/core/applyViewportLayout.ts'
+import {
+  applyViewportLayout,
+  bindViewportLayout,
+} from '@game/core/applyViewportLayout.ts'
 import {bootstrapGame} from '@game/core/bootstrapGame.ts'
+import {patchPhaserScaleForCssRotate} from '@game/core/patchPhaserScaleForCssRotate.ts'
 import {applyLocaleDom} from '@game/locale/applyLocaleDom.ts'
 import {localeManager} from '@game/locale/LocaleManager.ts'
 import {
@@ -39,6 +43,7 @@ import {initUpgradeModal} from '@game/ui/UpgradeModalDom.ts'
 async function main(): Promise<void> {
   installBrowserGuards()
   applyViewportLayout()
+  bindViewportLayout()
   await gamePersistence.hydrate()
   redditLifecycle.loadingStart()
 
@@ -69,6 +74,8 @@ async function main(): Promise<void> {
 
   const game = bootstrapGame(mount)
   setBrowserGuardGame(game)
+  // CSS rotate AABB가 Scale.FIT을 축소하지 않도록 parent 측정 패치
+  patchPhaserScaleForCssRotate(game)
   bindHudViewportSync(game)
 }
 
