@@ -39,6 +39,18 @@ gameover.kills,처치,KILLS
 gameover.coins,획득 코인,COINS
 gameover.retry,다시하기,RETRY
 gameover.upgrade,업그레이드,UPGRADE
+leaderboard.title,랭킹,RANKING
+leaderboard.thread,이 스레드,THREAD
+leaderboard.global,👑 전체,👑 GLOBAL
+leaderboard.me,내 순위,MY RANK
+leaderboard.you,나,You
+leaderboard.anonymous,게스트,Guest
+leaderboard.empty,아직 기록이 없습니다,No scores yet
+leaderboard.notRanked,랭킹 미등록,Not ranked yet
+leaderboard.loading,불러오는 중…,Loading…
+leaderboard.error,랭킹을 불러오지 못했습니다,Failed to load ranking
+leaderboard.retry,다시 시도,Retry
+leaderboard.outOfRange,{rank}위 밖,Outside top {rank}
 upgrade.title,무기 강화,WEAPON UPGRADE
 upgrade.damage,공격력,DMG
 upgrade.button,강화,UPGRADE

@@ -363,6 +363,61 @@
         <div id="coin-fly-layer" aria-hidden="true"></div>
         <div id="pickup-fly-layer" aria-hidden="true"></div>
         <div id="gameover-modal" class="doom-modal hidden">
+          <aside
+            id="gameover-leaderboard"
+            class="gameover-leaderboard"
+            aria-label="High score ranking"
+          >
+            <div class="gameover-leaderboard__header">
+              <h3
+                class="gameover-leaderboard__title"
+                data-i18n="leaderboard.title"
+              >
+                RANKING
+              </h3>
+              <div
+                class="gameover-leaderboard__tabs"
+                role="tablist"
+                aria-label="Leaderboard scope"
+              >
+                <button
+                  id="leaderboard-tab-post"
+                  type="button"
+                  class="gameover-leaderboard__tab gameover-leaderboard__tab--active"
+                  role="tab"
+                  aria-selected="true"
+                  data-scope="post"
+                  data-i18n="leaderboard.thread"
+                >
+                  THREAD
+                </button>
+                <button
+                  id="leaderboard-tab-global"
+                  type="button"
+                  class="gameover-leaderboard__tab"
+                  role="tab"
+                  aria-selected="false"
+                  data-scope="global"
+                  data-i18n="leaderboard.global"
+                >
+                  GLOBAL
+                </button>
+              </div>
+            </div>
+            <div
+              id="gameover-leaderboard-status"
+              class="gameover-leaderboard__status hidden"
+            ></div>
+            <div
+              id="gameover-leaderboard-body"
+              class="gameover-leaderboard__body"
+              role="tabpanel"
+            ></div>
+            <div
+              id="gameover-leaderboard-me"
+              class="gameover-leaderboard__me"
+            ></div>
+          </aside>
           <div class="doom-modal__panel doom-modal__panel--gameover">
             <h2
               class="doom-modal__title doom-modal__title--gameover"

@@ -2,6 +2,10 @@ import coinUrl from '../Image/UI/coin4_16x16.png';
 import {redditLifecycle} from '../platform/reddit/RedditLifecycle.ts';
 import { formatRunElapsed, highScoreStore } from '../systems/HighScoreStore.ts';
 import { domUiBridge } from './DomUiBridge.ts';
+import {
+  resetGameOverLeaderboard,
+  showGameOverLeaderboard,
+} from './GameOverLeaderboardDom.ts';
 import { showUpgradeModal } from './UpgradeModalDom.ts';
 
 export interface GameOverStats {
@@ -77,6 +81,8 @@ export function showGameOverModal(stats: GameOverStats, onRetry: () => void): vo
   if (newRecordEl) newRecordEl.classList.toggle('hidden', !isNewRecord);
   if (isNewRecord) redditLifecycle.happytime('newHighScore');
 
+  showGameOverLeaderboard(highScore);
+
   countToken += 1;
   const myToken = countToken;
   animateCount(document.getElementById('gameover-score'), stats.score, myToken);
@@ -91,6 +97,7 @@ export function showGameOverModal(stats: GameOverStats, onRetry: () => void): vo
     countToken += 1;
     retryBtn.removeEventListener('click', onRetryClick);
     upgradeBtn?.removeEventListener('click', onUpgradeClick);
+    resetGameOverLeaderboard();
     setGameOverHudActive(false);
     modal.classList.add('hidden');
     domUiBridge.setLayerInteractive(false);

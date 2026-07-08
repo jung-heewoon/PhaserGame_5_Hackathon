@@ -10,15 +10,21 @@ import {
   Endpoint,
   EndpointMethod,
   type ErrorRsp,
+  type GetLeaderboardRsp,
   type GetPersistenceBulkRsp,
   type SetPersistenceReq,
   type SetPersistenceRsp,
+  type SubmitLeaderboardReq,
+  type SubmitLeaderboardRsp,
 } from '../shared/api.ts'
 import {dbGetPersistenceBulk, dbGetUsername, dbSetPersistence} from './db.ts'
+import {getLeaderboards, submitLeaderboardScore} from './leaderboard.ts'
 
 type AnyRsp =
   | GetPersistenceBulkRsp
+  | GetLeaderboardRsp
   | SetPersistenceRsp
+  | SubmitLeaderboardRsp
   | UiResponse
   | TriggerResponse
   | ErrorRsp
@@ -40,11 +46,14 @@ async function route(
   reqMsg: IncomingMessage,
   rspMsg: ServerResponse,
 ): Promise<void> {
-  const endpoint = reqMsg.url?.slice(1) as Endpoint
-  const method = EndpointMethod[endpoint]
+  const endpoint = parseEndpoint(reqMsg.url)
+  const method =
+    endpoint in EndpointMethod
+      ? EndpointMethod[endpoint as Endpoint]
+      : undefined
 
   let rsp: AnyRsp
-  if (method !== reqMsg.method) {
+  if (!method || method !== reqMsg.method) {
     rsp = {error: 'not found', status: 404}
   } else {
     switch (endpoint) {
@@ -54,6 +63,12 @@ async function route(
       case Endpoint.SetPersistence:
         rsp = await routeSetPersistence(reqMsg)
         break
+      case Endpoint.GetLeaderboard:
+        rsp = await routeGetLeaderboard()
+        break
+      case Endpoint.SubmitLeaderboard:
+        rsp = await routeSubmitLeaderboard(reqMsg)
+        break
       case Endpoint.OnMenuNewPost:
         rsp = await routeMenuNewPost()
         break
@@ -61,13 +76,17 @@ async function route(
         rsp = await routeAppInstall()
         break
       default:
-        endpoint satisfies never
         rsp = {error: 'not found', status: 404}
         break
     }
   }
 
   writeJson<PartialJsonValue>('status' in rsp ? rsp.status : 200, rsp, rspMsg)
+}
+
+function parseEndpoint(url: string | undefined): Endpoint | string {
+  const pathname = new URL(url ?? '/', 'http://localhost').pathname.slice(1)
+  return pathname
 }
 
 async function routeGetPersistenceBulk(): Promise<GetPersistenceBulkRsp> {
@@ -85,6 +104,22 @@ async function routeSetPersistence(
   const username = await dbGetUsername()
   await dbSetPersistence(username, req.key, req.value)
   return {ok: true}
+}
+
+async function routeGetLeaderboard(): Promise<GetLeaderboardRsp> {
+  const username = await dbGetUsername()
+  return getLeaderboards(username, context.postId)
+}
+
+async function routeSubmitLeaderboard(
+  reqMsg: IncomingMessage,
+): Promise<SubmitLeaderboardRsp | ErrorRsp> {
+  const req = await readJson<SubmitLeaderboardReq>(reqMsg)
+  if (req.score === undefined || !Number.isFinite(req.score)) {
+    return {error: 'score required', status: 400}
+  }
+  const username = await dbGetUsername()
+  return submitLeaderboardScore(username, context.postId, req.score)
 }
 
 async function routeMenuNewPost(): Promise<UiResponse> {

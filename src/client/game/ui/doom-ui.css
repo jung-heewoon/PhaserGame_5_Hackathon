@@ -429,12 +429,21 @@
   z-index: 25;
 }
 
-/* 게임오버 배경은 클릭 통과 — 우상단 설정 버튼 등 HUD 조작 가능 */
+/* 게임오버 배경은 클릭 통과 — 우상단 설정 버튼 등 HUD 조작 가능
+ * 크기는 1280×720 디자인 px 고정 — HudViewportSync scale이 비율을 맞춤 */
 #gameover-modal:not(.hidden) {
   pointer-events: none;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 24px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-#gameover-modal:not(.hidden) .doom-modal__panel {
+#gameover-modal:not(.hidden) .doom-modal__panel,
+#gameover-modal:not(.hidden) .gameover-leaderboard {
   pointer-events: auto;
 }
 
@@ -724,9 +733,10 @@
   letter-spacing: 0.08em;
 }
 
-/* Game over result panel */
+/* Game over result panel — design px (스케일은 HudViewportSync) */
 .doom-modal__panel--gameover {
-  width: min(460px, 92%);
+  width: 460px;
+  flex-shrink: 0;
   padding: 30px 34px 26px;
   animation: doom-gameover-in 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.4);
 }
@@ -822,6 +832,346 @@
   padding: 12px 8px;
   min-width: 0;
 }
+
+/* Game over leaderboard — design px (vw/vh 금지: HUD scale과 충돌) */
+.gameover-leaderboard {
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  height: 580px;
+  max-height: 680px;
+  flex-shrink: 0;
+  border: 2px solid var(--doom-metal);
+  background: linear-gradient(180deg, rgba(14, 6, 8, 0.94), rgba(6, 6, 10, 0.96));
+  box-shadow:
+    inset 0 0 24px rgba(0, 0, 0, 0.85),
+    0 0 28px rgba(120, 0, 0, 0.35);
+  animation: doom-gameover-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.gameover-leaderboard__header {
+  flex-shrink: 0;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgba(58, 58, 66, 0.65);
+}
+
+.gameover-leaderboard__title {
+  margin: 0 0 10px;
+  font-family: var(--doom-font);
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  color: var(--doom-red-bright);
+  text-shadow: var(--doom-glow-red);
+  text-align: center;
+}
+
+.gameover-leaderboard__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.gameover-leaderboard__tab {
+  font-family: var(--doom-font);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  padding: 8px 6px;
+  color: #9a9aa6;
+  background: rgba(12, 12, 16, 0.9);
+  border: 2px solid var(--doom-metal);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.gameover-leaderboard__tab--active {
+  color: #fff;
+  border-color: var(--doom-red-bright);
+  background: rgba(80, 0, 0, 0.55);
+  text-shadow: var(--doom-glow-red);
+  box-shadow: 0 0 12px rgba(255, 34, 0, 0.35);
+}
+
+.gameover-leaderboard__tab-icon {
+  margin-right: 4px;
+}
+
+.gameover-leaderboard__status {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  font-family: var(--doom-font);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #c8c8d0;
+  text-align: center;
+}
+
+.gameover-leaderboard__status--error {
+  color: #ff8a80;
+}
+
+.gameover-leaderboard__body {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--doom-red) rgba(0, 0, 0, 0.4);
+}
+
+.gameover-leaderboard__body::-webkit-scrollbar {
+  width: 6px;
+  height: 0;
+}
+
+.gameover-leaderboard__body::-webkit-scrollbar:horizontal {
+  display: none;
+  height: 0;
+}
+
+.gameover-leaderboard__body::-webkit-scrollbar-thumb {
+  background: var(--doom-red);
+  border-radius: 3px;
+}
+
+.gameover-leaderboard__empty {
+  margin: 24px 0;
+  text-align: center;
+  font-family: var(--doom-font);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: #7a7a86;
+}
+
+.gameover-leaderboard__podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: end;
+  gap: 8px;
+  margin-bottom: 14px;
+  min-height: 148px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.gameover-leaderboard__podium--compact {
+  min-height: 118px;
+  margin-bottom: 10px;
+}
+
+.gameover-leaderboard__podium-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 8px 6px 10px;
+  border: 2px solid var(--doom-metal);
+  background: rgba(10, 8, 12, 0.88);
+  text-align: center;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.gameover-leaderboard__podium-slot--first {
+  min-height: 132px;
+  border-color: #ffd700;
+  background: linear-gradient(180deg, rgba(80, 60, 0, 0.35), rgba(20, 12, 4, 0.9));
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.28);
+  animation: leaderboard-gold-pulse 2.4s ease-in-out infinite;
+}
+
+.gameover-leaderboard__podium-slot--second {
+  min-height: 108px;
+  border-color: #c0c0c0;
+  background: linear-gradient(180deg, rgba(50, 50, 55, 0.35), rgba(12, 12, 14, 0.9));
+}
+
+.gameover-leaderboard__podium-slot--third {
+  min-height: 100px;
+  border-color: #cd7f32;
+  background: linear-gradient(180deg, rgba(70, 40, 10, 0.35), rgba(14, 10, 8, 0.9));
+}
+
+@keyframes leaderboard-gold-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.22);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(255, 215, 0, 0.45);
+  }
+}
+
+.gameover-leaderboard__podium-rank {
+  font-family: var(--doom-font);
+  font-size: 22px;
+  line-height: 1;
+  color: #e8e8ec;
+}
+
+.gameover-leaderboard__podium-slot--first .gameover-leaderboard__podium-rank {
+  font-size: 30px;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.65);
+}
+
+.gameover-leaderboard__podium-crown {
+  width: 22px;
+  height: 18px;
+  color: #ffd700;
+}
+
+.gameover-leaderboard__podium-slot--first .gameover-leaderboard__podium-crown {
+  width: 30px;
+  height: 24px;
+}
+
+.gameover-leaderboard__podium-user {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--doom-font);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #b0b0ba;
+}
+
+.gameover-leaderboard__podium-score {
+  font-family: var(--doom-font);
+  font-size: 20px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: var(--doom-glow-red);
+}
+
+.gameover-leaderboard__podium-slot--first .gameover-leaderboard__podium-score {
+  font-size: 26px;
+}
+
+.gameover-leaderboard__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.gameover-leaderboard__row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(58, 58, 66, 0.55);
+  background: rgba(8, 8, 12, 0.72);
+  font-family: var(--doom-font);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #c8c8d0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.gameover-leaderboard__row-rank {
+  font-size: 14px;
+  color: #9a9aa6;
+  font-variant-numeric: tabular-nums;
+}
+
+.gameover-leaderboard__row-user {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gameover-leaderboard__row-score {
+  font-size: 16px;
+  color: #e8e8ec;
+  font-variant-numeric: tabular-nums;
+}
+
+.gameover-leaderboard__me {
+  flex-shrink: 0;
+  padding: 12px 14px;
+  border-top: 2px solid var(--doom-red);
+  background: linear-gradient(180deg, rgba(40, 0, 0, 0.55), rgba(12, 4, 4, 0.95));
+  box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.45);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.gameover-leaderboard__me-label {
+  margin-bottom: 6px;
+  font-family: var(--doom-font);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #ff8a80;
+  text-transform: uppercase;
+}
+
+.gameover-leaderboard__me-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--doom-font);
+  font-size: 14px;
+  color: #fff;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.gameover-leaderboard__me-rank {
+  font-size: 18px;
+  color: var(--doom-red-bright);
+  text-shadow: var(--doom-glow-red);
+}
+
+.gameover-leaderboard__me-user {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gameover-leaderboard__me-score {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  color: #ffd447;
+  text-shadow: 0 0 8px rgba(184, 134, 11, 0.65);
+}
+
+.gameover-leaderboard__retry-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px;
+  font-family: var(--doom-font);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: rgba(80, 0, 0, 0.7);
+  border: 1px solid var(--doom-red-bright);
+  cursor: pointer;
+}
+
+/* 모바일 portrait-rotate는 #game-shell 전체가 90° — HUD 좌표는 항상 가로 1280×720.
+ * 세로 스택(order/vh) 쓰지 않고 좌측 랭킹 + 우측 결과 레이아웃 유지 */
 
 .doom-btn--ghost {
   position: relative;
