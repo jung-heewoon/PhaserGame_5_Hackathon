@@ -1,0 +1,21 @@
+---
+description: DOM HUD, 모달, CSS, i18n, Phaser HUD 동기화
+globs: src/client/game.html,src/client/game/ui/**/*,src/client/game/style.css,src/client/game/locale/**/*
+alwaysApply: false
+---
+
+# Client DOM UI
+
+**Pattern**: static markup in `game.html` → `*Dom.ts` binds events/render → CSS in `ui/*.css` (imported from `game.ts`).
+
+**Scale**: `#doom-hud-layer` is 1280×720; `HudViewportSync` applies `transform: scale(...)`. All HUD/modal sizes use **fixed design px**, not viewport units.
+
+**i18n**
+- Strings: `public/locale/strings.csv`
+- Static nodes: `data-i18n` + `applyLocaleDom()`
+- Dynamic UI: `localeManager.t('key', {params})`
+- On locale change: hook via `DomUiBridge.refreshLocale()` or modal-specific `refresh*Locale()`
+
+**Game over layout**: `#gameover-modal` = row flex — left `#gameover-leaderboard` (400×580), right `.doom-modal__panel--gameover` (460px). Keep side-by-side on mobile (shell is already rotated).
+
+**Scroll**: leaderboard body = `overflow-y: auto`, `overflow-x: hidden`, `minmax(0,1fr)` for text truncation.

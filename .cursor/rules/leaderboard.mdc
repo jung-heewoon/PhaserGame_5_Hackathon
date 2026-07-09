@@ -1,0 +1,26 @@
+---
+description: 하이스코어 랭킹(THREAD/GLOBAL) 구현 규칙
+globs: src/server/leaderboard.ts,src/client/game/ui/GameOverLeaderboardDom.ts,src/client/game/platform/reddit/Leaderboard*.ts
+alwaysApply: false
+---
+
+# Leaderboard
+
+**Scopes**
+- THREAD (`post`): `leaderboard:post:{postId}` or `default` if no postId
+- GLOBAL: `leaderboard:global` (top 10)
+
+**Flow (game over)**
+1. `highScoreStore.tryUpdate(score)` — personal persistence
+2. `leaderboardClient.submitScore(highScore)` — server upserts if higher
+3. `GameOverLeaderboardDom` renders podium (1–3) + list (4+) + sticky me bar
+
+**Server**
+- Seed missing dummy members before upsert (`seedIfEmpty` merges, not only empty key)
+- `anonymous` users: skip upsert, still return leaderboard data
+
+**Client fallback**
+- `withDummyFallback()` in `GameOverLeaderboardDom.ts` — if a scope's `entries` is empty, fill from `LeaderboardDummy.ts`
+- Don't show empty THREAD when GLOBAL has data only
+
+**API**: `GET api/leaderboard`, `POST api/leaderboard/submit` — types in `src/shared/api.ts`

@@ -1,0 +1,24 @@
+---
+description: hell-dice-shooter 핵심 구조·탐색 경로·공통 규칙
+alwaysApply: true
+---
+
+# Project core
+
+Devvit app `hell-dice-shooter`: Phaser game + DOM HUD overlay + Node server + Redis.
+
+**Before broad search**, read `AGENTS.md` and open only relevant paths:
+- Game: `src/client/game/scenes/RunnerYatzyScene.ts`, `systems/`
+- UI: `src/client/game.html`, `ui/*Dom.ts`, `ui/*.css`
+- API: `src/shared/api.ts`, `src/server/server.ts`
+- Build: `scripts/build.mjs`, `devvit.json`
+
+**Constraints**
+- Minimize diff scope; match existing style; no drive-by refactors.
+- No git commit/push unless user asks.
+- User-facing replies in Korean.
+
+**HUD layout**
+- Design space: 1280×720 px (`GameDisplayConfig.ts`).
+- Scale via `HudViewportSync` — do not use `vw`/`vh` for HUD/modal sizing.
+- Mobile uses `html.portrait-rotate` on `#game-shell`; don't re-stack HUD modals vertically for portrait.

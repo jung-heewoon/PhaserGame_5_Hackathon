@@ -1,0 +1,24 @@
+---
+description: Devvit server, Redis, API 라우팅
+globs: src/server/**/*,src/shared/**/*
+alwaysApply: false
+---
+
+# Devvit server
+
+**Entry**: `src/server/index.ts` → `server.ts` → `dist/server/index.cjs`
+
+**Add API**
+1. Types + `Endpoint` in `src/shared/api.ts`
+2. Route in `src/server/server.ts` (`parseEndpoint` strips query string)
+3. DB logic in `db.ts` or `leaderboard.ts`
+4. Test in `src/server/server.test.ts` (mock `redis.*`, `runWithContext`)
+
+**Identity**: `dbGetUsername()` = `reddit.getCurrentUsername() ?? 'anonymous'`. Never accept username from request body.
+
+**Persistence keys**: `src/shared/persistence.ts` → Redis `user:{username}:{key}`
+
+**Redis leaderboard**
+- Keys: `leaderboard:post:{postId|default}`, `leaderboard:global`
+- Top-N: `zCard` → `zRange(key, card-N, card-1, {by:'rank'})` → reverse (no negative rank indices)
+- Rank display: `displayRank = zCard - zRank` (1-based, high score = rank 1)
