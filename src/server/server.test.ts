@@ -4,13 +4,16 @@ import type {AddressInfo, Server} from 'node:net'
 import {after, before, beforeEach, test} from 'node:test'
 import {type Context, reddit, redis, runWithContext} from '@devvit/web/server'
 import {
+  type ClaimTombstonesRsp,
   Endpoint,
   type ErrorRsp,
   type GetLeaderboardRsp,
   type GetPersistenceBulkRsp,
+  type GetTombstonesRsp,
   type SetPersistenceReq,
   type SetPersistenceRsp,
   type SubmitLeaderboardRsp,
+  type UpsertTombstoneRsp,
 } from '../shared/api.ts'
 import {onReq} from './server.ts'
 
@@ -19,9 +22,14 @@ type ZMember = {member: string; score: number}
 let server: Server
 let serverURL: string
 const redisValues = new Map<string, string>()
+const redisHashes = new Map<string, Map<string, string>>()
 const redisSortedSets = new Map<string, ZMember[]>()
 const redisGet = redis.get.bind(redis)
 const redisSet = redis.set.bind(redis)
+const redisHGet = redis.hGet.bind(redis)
+const redisHGetAll = redis.hGetAll.bind(redis)
+const redisHSet = redis.hSet.bind(redis)
+const redisHDel = redis.hDel.bind(redis)
 const redisZAdd = redis.zAdd.bind(redis)
 const redisZRange = redis.zRange.bind(redis)
 const redisZRank = redis.zRank.bind(redis)
@@ -39,6 +47,15 @@ function sortedSetFor(key: string): ZMember[] {
   return set
 }
 
+function hashFor(key: string): Map<string, string> {
+  let hash = redisHashes.get(key)
+  if (!hash) {
+    hash = new Map()
+    redisHashes.set(key, hash)
+  }
+  return hash
+}
+
 function sortSet(set: ZMember[]): void {
   set.sort((a, b) => {
     if (a.score !== b.score) return a.score - b.score
@@ -51,6 +68,24 @@ before(async () => {
   redis.set = async (key, value) => {
     redisValues.set(key, value)
     return 'OK'
+  }
+  redis.hGet = async (key, field) => hashFor(key).get(field)
+  redis.hGetAll = async key => Object.fromEntries(hashFor(key).entries())
+  redis.hSet = async (key, data) => {
+    const hash = hashFor(key)
+    if (typeof data === 'string') return 0
+    for (const [field, value] of Object.entries(data)) {
+      hash.set(field, value)
+    }
+    return Object.keys(data).length
+  }
+  redis.hDel = async (key, fields) => {
+    const hash = hashFor(key)
+    let removed = 0
+    for (const field of fields) {
+      if (hash.delete(field)) removed += 1
+    }
+    return removed
   }
   redis.zAdd = async (key, ...members) => {
     const set = sortedSetFor(key)
@@ -113,6 +148,10 @@ before(async () => {
 after(async () => {
   redis.get = redisGet
   redis.set = redisSet
+  redis.hGet = redisHGet
+  redis.hGetAll = redisHGetAll
+  redis.hSet = redisHSet
+  redis.hDel = redisHDel
   redis.zAdd = redisZAdd
   redis.zRange = redisZRange
   redis.zRank = redisZRank
@@ -128,6 +167,7 @@ after(async () => {
 
 beforeEach(() => {
   redisValues.clear()
+  redisHashes.clear()
   redisSortedSets.clear()
 })
 
@@ -201,8 +241,7 @@ test('submit leaderboard keeps higher score only', async () => {
   })
   const body = (await rsp.json()) as SubmitLeaderboardRsp
   // 200점은 글로벌 Top10 밖일 수 있음 → me / meOutOfRange로 검증
-  const score =
-    body.global.me?.score ?? body.global.meOutOfRange?.score ?? null
+  const score = body.global.me?.score ?? body.global.meOutOfRange?.score ?? null
   assert.equal(score, 200)
 })
 
@@ -217,7 +256,9 @@ test('get leaderboard ranks multiple users', async () => {
   assert.equal(body.global.entries[0]?.username, 'test-user')
   assert.equal(body.global.me?.rank, 1)
   assert.equal(body.global.me?.score, 3000)
-  assert.ok(body.global.entries.some(entry => entry.username === 'global_champ'))
+  assert.ok(
+    body.global.entries.some(entry => entry.username === 'global_champ'),
+  )
 })
 
 test('get leaderboard seeds dummy users when empty', async () => {
@@ -242,4 +283,111 @@ test('submit after empty still keeps dummy users', async () => {
   assert.ok(body.global.entries.length >= 10)
   assert.ok(body.post.entries.some(entry => entry.username === 'dice_demon'))
   assert.ok(body.post.entries.some(entry => entry.username === 'test-user'))
+})
+
+test('get tombstones empty', async () => {
+  const rsp = await fetch(`${serverURL}/${Endpoint.GetTombstones}`)
+  assert.equal(rsp.status, 200)
+  const body = (await rsp.json()) as GetTombstonesRsp
+  assert.equal(body.me, 'test-user')
+  assert.deepEqual(body.tombstones, [])
+})
+
+test('upsert tombstone and list', async () => {
+  const upsertRsp = await fetch(`${serverURL}/${Endpoint.UpsertTombstone}`, {
+    body: JSON.stringify({
+      score: 15400,
+      triggerMs: 120000,
+      coinsAtDeath: 350,
+      deathReasonId: 0,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(upsertRsp.status, 200)
+  const upsertBody = (await upsertRsp.json()) as UpsertTombstoneRsp
+  assert.equal(upsertBody.updated, true)
+  assert.equal(upsertBody.record?.score, 15400)
+  assert.equal(upsertBody.record?.triggerMs, 120000)
+
+  const listRsp = await fetch(`${serverURL}/${Endpoint.GetTombstones}`)
+  const listBody = (await listRsp.json()) as GetTombstonesRsp
+  assert.equal(listBody.tombstones.length, 1)
+  assert.equal(listBody.tombstones[0]?.username, 'test-user')
+})
+
+test('upsert tombstone keeps higher trigger only', async () => {
+  await fetch(`${serverURL}/${Endpoint.UpsertTombstone}`, {
+    body: JSON.stringify({
+      score: 100,
+      triggerMs: 200000,
+      coinsAtDeath: 10,
+      deathReasonId: 1,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  const lowRsp = await fetch(`${serverURL}/${Endpoint.UpsertTombstone}`, {
+    body: JSON.stringify({
+      score: 99999,
+      triggerMs: 50000,
+      coinsAtDeath: 99,
+      deathReasonId: 2,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  const lowBody = (await lowRsp.json()) as UpsertTombstoneRsp
+  assert.equal(lowBody.updated, false)
+  assert.equal(lowBody.record?.triggerMs, 200000)
+})
+
+test('claim tombstones deletes and returns bonus', async () => {
+  const record = {
+    score: 8200,
+    triggerMs: 90000,
+    coinsAtDeath: 200,
+    deathReasonId: 3,
+    updatedAt: 1,
+  }
+  await redis.hSet('tombstone:post:t3_123', {
+    other_user: JSON.stringify(record),
+  })
+
+  const rsp = await fetch(`${serverURL}/${Endpoint.ClaimTombstones}`, {
+    body: JSON.stringify({usernames: ['other_user']}),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(rsp.status, 200)
+  const body = (await rsp.json()) as ClaimTombstonesRsp
+  assert.equal(body.claimed.length, 1)
+  assert.equal(body.totalCoinBonus, 20)
+  assert.equal(
+    (await redis.hGet('tombstone:post:t3_123', 'other_user')) ?? null,
+    null,
+  )
+})
+
+test('claim rejects own tombstone', async () => {
+  await fetch(`${serverURL}/${Endpoint.UpsertTombstone}`, {
+    body: JSON.stringify({
+      score: 100,
+      triggerMs: 10000,
+      coinsAtDeath: 50,
+      deathReasonId: 0,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  const rsp = await fetch(`${serverURL}/${Endpoint.ClaimTombstones}`, {
+    body: JSON.stringify({usernames: ['test-user']}),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(rsp.status, 400)
+  assert.deepEqual<ErrorRsp>(await rsp.json(), {
+    error: 'cannot claim own tombstone',
+    status: 400,
+  })
 })

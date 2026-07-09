@@ -13,6 +13,8 @@ export interface GameOverStats {
   coins: number;
   kills: number;
   elapsedMs: number;
+  highScore?: number;
+  isNewRecord?: boolean;
 }
 
 /** 숫자가 0 → target 으로 카운트업 되는 연출 지속 시간 */
@@ -72,7 +74,10 @@ export function showGameOverModal(stats: GameOverStats, onRetry: () => void): vo
   const timeEl = document.getElementById('gameover-time');
   if (timeEl) timeEl.textContent = formatRunElapsed(stats.elapsedMs);
 
-  const { highScore, isNewRecord } = highScoreStore.tryUpdate(stats.score);
+  const { highScore, isNewRecord } =
+    stats.highScore !== undefined && stats.isNewRecord !== undefined
+      ? { highScore: stats.highScore, isNewRecord: stats.isNewRecord }
+      : highScoreStore.tryUpdate(stats.score);
   const hiscoreBox = document.getElementById('gameover-hiscore');
   const hiscoreEl = document.getElementById('gameover-high-score');
   const newRecordEl = document.getElementById('gameover-new-record');

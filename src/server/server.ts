@@ -7,24 +7,33 @@ import type {
   UiResponse,
 } from '@devvit/web/shared'
 import {
+  type ClaimTombstonesReq,
+  type ClaimTombstonesRsp,
   Endpoint,
   EndpointMethod,
   type ErrorRsp,
   type GetLeaderboardRsp,
   type GetPersistenceBulkRsp,
+  type GetTombstonesRsp,
   type SetPersistenceReq,
   type SetPersistenceRsp,
   type SubmitLeaderboardReq,
   type SubmitLeaderboardRsp,
+  type UpsertTombstoneReq,
+  type UpsertTombstoneRsp,
 } from '../shared/api.ts'
 import {dbGetPersistenceBulk, dbGetUsername, dbSetPersistence} from './db.ts'
 import {getLeaderboards, submitLeaderboardScore} from './leaderboard.ts'
+import {claimTombstones, listTombstones, upsertTombstone} from './tombstone.ts'
 
 type AnyRsp =
   | GetPersistenceBulkRsp
   | GetLeaderboardRsp
+  | GetTombstonesRsp
   | SetPersistenceRsp
   | SubmitLeaderboardRsp
+  | UpsertTombstoneRsp
+  | ClaimTombstonesRsp
   | UiResponse
   | TriggerResponse
   | ErrorRsp
@@ -68,6 +77,15 @@ async function route(
         break
       case Endpoint.SubmitLeaderboard:
         rsp = await routeSubmitLeaderboard(reqMsg)
+        break
+      case Endpoint.GetTombstones:
+        rsp = await routeGetTombstones()
+        break
+      case Endpoint.UpsertTombstone:
+        rsp = await routeUpsertTombstone(reqMsg)
+        break
+      case Endpoint.ClaimTombstones:
+        rsp = await routeClaimTombstones(reqMsg)
         break
       case Endpoint.OnMenuNewPost:
         rsp = await routeMenuNewPost()
@@ -120,6 +138,48 @@ async function routeSubmitLeaderboard(
   }
   const username = await dbGetUsername()
   return submitLeaderboardScore(username, context.postId, req.score)
+}
+
+async function routeGetTombstones(): Promise<GetTombstonesRsp> {
+  const username = await dbGetUsername()
+  return listTombstones(username, context.postId)
+}
+
+async function routeUpsertTombstone(
+  reqMsg: IncomingMessage,
+): Promise<UpsertTombstoneRsp | ErrorRsp> {
+  const req = await readJson<UpsertTombstoneReq>(reqMsg)
+  if (
+    req.score === undefined ||
+    !Number.isFinite(req.score) ||
+    req.triggerMs === undefined ||
+    !Number.isFinite(req.triggerMs) ||
+    req.coinsAtDeath === undefined ||
+    !Number.isFinite(req.coinsAtDeath) ||
+    req.deathReasonId === undefined ||
+    !Number.isFinite(req.deathReasonId)
+  ) {
+    return {
+      error: 'score, triggerMs, coinsAtDeath, deathReasonId required',
+      status: 400,
+    }
+  }
+  const username = await dbGetUsername()
+  return upsertTombstone(username, context.postId, req)
+}
+
+async function routeClaimTombstones(
+  reqMsg: IncomingMessage,
+): Promise<ClaimTombstonesRsp | ErrorRsp> {
+  const req = await readJson<ClaimTombstonesReq>(reqMsg)
+  const username = await dbGetUsername()
+  const result = await claimTombstones(
+    username,
+    context.postId,
+    req.usernames ?? [],
+  )
+  if ('error' in result) return result
+  return result
 }
 
 async function routeMenuNewPost(): Promise<UiResponse> {

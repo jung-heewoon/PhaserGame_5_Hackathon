@@ -10,6 +10,7 @@ import '@game/ui/upgrade-modal.css'
 import '@game/ui/yatzy-modal.css'
 import '@game/ui/mobile-controls.css'
 import '@game/ui/tutorial-modal.css'
+import '@game/ui/tombstone-reward.css'
 import {
   applyViewportLayout,
   bindViewportLayout,
@@ -38,6 +39,7 @@ import {mobileControls} from '@game/ui/MobileControlsDom.ts'
 import {initPickupFly} from '@game/ui/PickupFlyDom.ts'
 import {initPlayerDamageFlash} from '@game/ui/PlayerDamageFlashDom.ts'
 import {initDiceHud} from '@game/ui/RunHudDom.ts'
+import {initTombstoneRewardModal} from '@game/ui/TombstoneRewardModalDom.ts'
 import {initUpgradeModal} from '@game/ui/UpgradeModalDom.ts'
 
 async function main(): Promise<void> {
@@ -64,6 +66,7 @@ async function main(): Promise<void> {
   initCoinHud()
   initPickupFly()
   initUpgradeModal()
+  initTombstoneRewardModal()
   mobileControls.init()
   domUiBridge.init()
 

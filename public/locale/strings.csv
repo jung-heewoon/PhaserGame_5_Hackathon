@@ -136,3 +136,28 @@ tutorial.hand_desc.THREE_OF_A_KIND,같은 눈금 3개,Three of a kind
 tutorial.hand_desc.TWO_PAIR,서로 다른 페어 2쌍,Two different pairs
 tutorial.hand_desc.ONE_PAIR,같은 눈금 2개,One pair
 tutorial.hand_desc.NONE,특별한 조합 없음 (하이 카드),No special combo (high card)
+tombstone.title,비석 발견!,TOMBSTONE!
+tombstone.continue,피버타임!,FEVER TIME!
+tombstone.message,{user}님이 {score}점에서 {reason} 넘어졌습니다!,{user} fell at {score} pts — {reason}!
+tombstone.coins,+{amount} Coins!,+{amount} Coins!
+tombstone.tab,{current}/{total},{current}/{total}
+tombstone.death.00,악마의 손톱에 긁혀,clawed by a demon's nails
+tombstone.death.01,주사위 굴리다 몹이랑 눈이 맞아,locked eyes with a mob while rolling dice
+tombstone.death.02,보스 브링어의 빔에 흡수되어,absorbed by the Bringer's beam
+tombstone.death.03,미니건 과열로 총이 폭발하며,blown up by an overheated minigun
+tombstone.death.04,야찌 팝업 보는 사이에,while staring at the Yatzy popup
+tombstone.death.05,코인 줍다가 허리를 삐끗해,threw out their back picking up coins
+tombstone.death.06,레일건 반동에 튕겨져 나가,knocked away by railgun recoil
+tombstone.death.07,핵미사일 자폭 범위 안에서,caught in their own nuke
+tombstone.death.08,가디언 스파이크에 꿰뚫려,impaled on a Guardian spike
+tombstone.death.09,안개 너머로 떨어져,fell beyond the fog
+tombstone.death.10,콤보 자랑하다 방심해서,got cocky showing off a combo
+tombstone.death.11,탄창 없는데 야찌 안 열어서,ran dry without opening Yatzy
+tombstone.death.12,듀얼 피스톨 반동에 양손이 꼬여,tangled both hands on dual pistols
+tombstone.death.13,샷건 근접전에서 자기 산탄에,shot themselves with a shotgun
+tombstone.death.14,미사일 유도 실패로 벽에 박혀,slammed into a wall chasing a missile
+tombstone.death.15,보스 상자 열려는데 몹에게 습격당해,ambushed while opening a boss chest
+tombstone.death.16,주사위 다섯 개가 동시에 1이 나와 운명에 굴복해,surrendered to five ones on the dice
+tombstone.death.17,런너 족보 연습하다 길을 잃어,got lost practicing poker hands
+tombstone.death.18,Reddit 댓글 읽다가 산만해져,distracted reading Reddit comments
+tombstone.death.19,비석 밟으려다 발이 꼬여,tripped trying to step on a tombstone

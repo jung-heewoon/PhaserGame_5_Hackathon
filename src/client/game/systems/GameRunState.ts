@@ -20,6 +20,7 @@ export class GameRunState {
   private _diceCount: number;
   private _weaponId: WeaponId;
   private _ammo: number;
+  private _feverInfiniteAmmo = false;
   private _listeners = new Set<ChangeListener>();
 
   constructor() {
@@ -30,11 +31,11 @@ export class GameRunState {
 
   get snapshot(): GameRunSnapshot {
     const entry = getEntryByWeapon(this._weaponId);
-    const infinite = entry.maxAmmo === null;
+    const infinite = entry.maxAmmo === null || this._feverInfiniteAmmo;
     return {
       currentDiceCount: this._diceCount,
       currentWeapon: this._weaponId,
-      currentAmmo: infinite ? 0 : this._ammo,
+      currentAmmo: infinite && entry.maxAmmo !== null ? entry.maxAmmo : infinite ? 0 : this._ammo,
       isInfiniteAmmo: infinite,
     };
   }
@@ -82,13 +83,13 @@ export class GameRunState {
 
   canFire(): boolean {
     const entry = this.weaponEntry;
-    if (entry.maxAmmo === null) return true;
+    if (entry.maxAmmo === null || this._feverInfiniteAmmo) return true;
     return this._ammo > 0;
   }
 
   consumeAmmo(): boolean {
     const entry = this.weaponEntry;
-    if (entry.maxAmmo === null) return true;
+    if (entry.maxAmmo === null || this._feverInfiniteAmmo) return true;
     if (this._ammo <= 0) return false;
     this._ammo -= 1;
     this.notify();
@@ -113,6 +114,13 @@ export class GameRunState {
 
   reset(): void {
     this._diceCount = RUN_GAME_CONFIG.initialDiceCount;
+    this._feverInfiniteAmmo = false;
     this.equipDefaultPistol();
+  }
+
+  setFeverInfiniteAmmo(active: boolean): void {
+    if (this._feverInfiniteAmmo === active) return;
+    this._feverInfiniteAmmo = active;
+    this.notify();
   }
 }

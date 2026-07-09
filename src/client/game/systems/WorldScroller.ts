@@ -7,6 +7,7 @@ import {
 import DicePickupEntity from '../entities/DicePickupEntity.ts';
 import HeartPickupEntity from '../entities/HeartPickupEntity.ts';
 import BulletPickupEntity from '../entities/BulletPickupEntity.ts';
+import TombstonePickupEntity from '../entities/TombstonePickupEntity.ts';
 import EnemyEntity from '../entities/EnemyEntity.ts';
 import BossEntity from '../entities/BossEntity.ts';
 import FireObstacleEntity from '../entities/FireObstacleEntity.ts';
@@ -72,6 +73,7 @@ export class WorldScroller {
         ent instanceof DicePickupEntity ||
         ent instanceof HeartPickupEntity ||
         ent instanceof BulletPickupEntity ||
+        ent instanceof TombstonePickupEntity ||
         ent instanceof EnemyEntity ||
         ent instanceof BossEntity ||
         ent instanceof FireObstacleEntity ||
@@ -152,6 +154,11 @@ export class WorldScroller {
         if (ent._killed) continue;
         if (ent.pos.y > behindLimit || ent.pos.y < aheadLimit) {
           this.entityPool.releaseBullet(ent);
+        }
+      } else if (ent instanceof TombstonePickupEntity) {
+        if (ent._killed) continue;
+        if (ent.pos.y > behindLimit || ent.pos.y < aheadLimit) {
+          this.entityPool.releaseTombstone(ent);
         }
       } else if (ent instanceof EnemyEntity) {
         if (ent._killed) continue;

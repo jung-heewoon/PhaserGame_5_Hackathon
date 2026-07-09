@@ -1,0 +1,120 @@
+.tombstone-label-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 12;
+}
+
+.tombstone-label {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  font-family: var(--doom-font, monospace);
+  font-size: 14px;
+  font-weight: 700;
+  color: #f5e6c8;
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.9),
+    1px 1px 0 #000;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+#tombstone-reward-modal .doom-modal__panel--tombstone {
+  width: 520px;
+  min-height: 360px;
+  padding: 28px 32px 24px;
+  text-align: center;
+}
+
+.tombstone-reward__title {
+  margin: 0 0 12px;
+  font-size: 28px;
+  color: #ffd56a;
+  letter-spacing: 0.08em;
+}
+
+.tombstone-reward__message {
+  margin: 0 0 16px;
+  font-size: 16px;
+  line-height: 1.45;
+  color: #f0e4d0;
+  min-height: 72px;
+}
+
+.tombstone-reward__coins {
+  margin: 0 0 18px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffcc33;
+}
+
+.tombstone-reward__tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.tombstone-reward__tab-btn {
+  width: 36px;
+  height: 36px;
+  border: 2px solid #8a6a3a;
+  background: rgba(20, 12, 8, 0.85);
+  color: #f5d78e;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.tombstone-reward__tab-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.tombstone-reward__tab-counter {
+  min-width: 64px;
+  font-size: 14px;
+  color: #c9b08a;
+}
+
+.tombstone-reward__dice-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  min-height: 56px;
+}
+
+.tombstone-reward__die {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #3a2818, #1a1008);
+  border: 2px solid #c9a050;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffe9a8;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.tombstone-reward__continue {
+  min-width: 180px;
+}
+
+#gun-view-layer.fever-active .gun-view__single,
+#gun-view-layer.fever-active .gun-view__dual-l,
+#gun-view-layer.fever-active .gun-view__dual-r,
+#gun-view-layer.fever-active .gun-view__nuclear-hand {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.85)) saturate(1.35) hue-rotate(-8deg);
+}
+
+#gun-view-layer.fever-warn.fever-blink-off .gun-view__single,
+#gun-view-layer.fever-warn.fever-blink-off .gun-view__dual-l,
+#gun-view-layer.fever-warn.fever-blink-off .gun-view__dual-r,
+#gun-view-layer.fever-warn.fever-blink-off .gun-view__nuclear-hand {
+  opacity: 0.35;
+}

@@ -2,7 +2,7 @@ import { RUN_GAME_CONFIG } from '../config/RunGameConfig.ts';
 import {redditLifecycle} from '../platform/reddit/RedditLifecycle.ts';
 
 /** 게임플레이이 멈춘 이유 — null이면 질주 중 */
-export type RunFreezeReason = 'yatzy' | 'dead' | 'settings' | 'bossReward' | 'tutorial';
+export type RunFreezeReason = 'yatzy' | 'dead' | 'settings' | 'bossReward' | 'tutorial' | 'tombstone';
 export class RunSession {
   freezeReason: RunFreezeReason | null = null;
   /** 사망 후 재시작 전까지 팝업·unfreeze 차단 */
@@ -10,6 +10,8 @@ export class RunSession {
   ammoDepletionHandled = false;
   /** 야찌 팝업이 열려 있을 때 보스 상자 보상을 지연 */
   pendingBossReward = false;
+  /** 야찌/보스상자 중 비석 충돌 지연 */
+  pendingTombstonePickup = false;
   /** 이번 런에서 처치한 보스 수 — 스폰 패턴 리롤·통계 */
   bossClearCount = 0;
   onPlayerDeath: (() => void) | null = null;
@@ -69,6 +71,7 @@ export class RunSession {
     if (this.playerDead) return;
     this.playerDead = true;
     this.pendingBossReward = false;
+    this.pendingTombstonePickup = false;
     this.ammoDepletionHandled = true;
     this.freeze('dead');
   }
@@ -78,6 +81,7 @@ export class RunSession {
     this.playerDead = false;
     this.ammoDepletionHandled = false;
     this.pendingBossReward = false;
+    this.pendingTombstonePickup = false;
     this.runDistance = 0;
     this.totalWorldShift = 0;
     this.worldShiftedThisFrame = false;

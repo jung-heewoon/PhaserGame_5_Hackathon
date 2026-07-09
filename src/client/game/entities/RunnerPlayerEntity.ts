@@ -2,6 +2,7 @@ import TPFEntity from 'twopointfive-phaser-3/src/twopointfive/entity.ts';
 import type { EntityContext } from 'twopointfive-phaser-3/src/twopointfive/types.ts';
 import { clampToCorridorX, RUN_GAME_CONFIG } from '../config/RunGameConfig.ts';
 import { RunSession } from '../systems/RunSession.ts';
+import { feverTimeSystem } from '../systems/FeverTimeSystem.ts';
 import { playPlayerDamageFlash } from '../ui/PlayerDamageFlashDom.ts';
 
 export default class RunnerPlayerEntity extends TPFEntity {
@@ -68,6 +69,7 @@ export default class RunnerPlayerEntity extends TPFEntity {
 
   receiveDamage(amount: number, _from: TPFEntity): void {
     if (this.isDead || this.session.isGameplayFrozen) return;
+    if (feverTimeSystem.isActive) return;
     if (this.contactIFrameMs > 0) return;
 
     this.health -= amount;

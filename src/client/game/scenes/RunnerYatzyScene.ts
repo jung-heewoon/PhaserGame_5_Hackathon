@@ -24,6 +24,10 @@ import {
   buildHeartPickupImage,
   preloadHeartPickup,
 } from '../assets/HeartPickupAssets.ts';
+import {
+  buildTombstonePickupImage,
+  preloadTombstonePickup,
+} from '../assets/TombstonePickupAssets.ts';
 import { buildHitEffectCatalog, preloadHitEffects } from '../assets/HitEffectAssets.ts';
 import {
   buildWeaponExplosionCatalog,
@@ -46,6 +50,7 @@ import BeamFlashEntity from '../entities/BeamFlashEntity.ts';
 import DicePickupEntity from '../entities/DicePickupEntity.ts';
 import HeartPickupEntity from '../entities/HeartPickupEntity.ts';
 import BulletPickupEntity from '../entities/BulletPickupEntity.ts';
+import TombstonePickupEntity from '../entities/TombstonePickupEntity.ts';
 import EnemyEntity from '../entities/EnemyEntity.ts';
 import BossEntity from '../entities/BossEntity.ts';
 import FireObstacleEntity from '../entities/FireObstacleEntity.ts';
@@ -77,6 +82,12 @@ import { WeaponExplosionVfx } from '../systems/WeaponExplosionVfx.ts';
 import { WeaponFireSystem } from '../systems/WeaponFireSystem.ts';
 import { NuclearLaunchSequence } from '../systems/NuclearLaunchSequence.ts';
 import { WorldScroller } from '../systems/WorldScroller.ts';
+import { TombstoneDirector } from '../systems/TombstoneDirector.ts';
+import { TombstonePickupFlow, pickDeathReasonForRun } from '../systems/TombstonePickupFlow.ts';
+import { feverTimeSystem } from '../systems/FeverTimeSystem.ts';
+import { highScoreStore } from '../systems/HighScoreStore.ts';
+import { tombstoneClient } from '../platform/reddit/TombstoneClient.ts';
+import { clearTombstoneLabels, syncTombstoneLabels } from '../ui/TombstoneLabelDom.ts';
 import { YatzyFlowController } from '../systems/YatzyFlowController.ts';
 import { domUiBridge } from '../ui/DomUiBridge.ts';
 import { updateStatusHud } from '../ui/RunHudDom.ts';
@@ -127,11 +138,14 @@ export class RunnerYatzyScene extends Phaser.Scene {
   private spawnDirector: SpawnDirector | null = null;
   private bossDirector: BossDirector | null = null;
   private worldScroller: WorldScroller | null = null;
+  private tombstoneDirector: TombstoneDirector | null = null;
+  private tombstonePickupFlow: TombstonePickupFlow | null = null;
   private combat: CombatSystem | null = null;
   private yatzyFlow: YatzyFlowController | null = null;
   private diceImage: ImageInfo | null = null;
   private heartImage: ImageInfo | null = null;
   private bulletImage: ImageInfo | null = null;
+  private tombstoneImage: ImageInfo | null = null;
   private enemyCatalog: EnemyCatalog | null = null;
   private hitEffectVfx = new HitEffectVfx();
   private damageNumberVfx = new DamageNumberVfx();
@@ -164,6 +178,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
     preloadDicePickup(this);
     preloadHeartPickup(this);
     preloadBulletPickup(this);
+    preloadTombstonePickup(this);
     preloadHitEffects(this);
     preloadWeaponExplosions(this);
     preloadGameSounds(this);
@@ -187,6 +202,9 @@ export class RunnerYatzyScene extends Phaser.Scene {
     resetComboHud();
     this.comboScore.reset();
     this.coinSystem.reset();
+    feverTimeSystem.reset();
+    this.runState.setFeverInfiniteAmmo(false);
+    clearTombstoneLabels();
     gunViewDom.init();
 
     initComboHud();
@@ -250,6 +268,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
     this.registerDiceFlySprite();
     this.heartImage = buildHeartPickupImage(tpf, this);
     this.bulletImage = buildBulletPickupImage(tpf, this);
+    this.tombstoneImage = buildTombstonePickupImage(tpf, this);
     this.enemyCatalog = buildEnemyCatalog(tpf, this);
     const bossCatalog = buildBossCatalog(tpf, this);
     const bossEffectImages = buildBossEffectImages(tpf, this);
@@ -268,6 +287,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
     tpf.registerEntityClass('DicePickup', entityCtx(DicePickupEntity));
     tpf.registerEntityClass('HeartPickup', entityCtx(HeartPickupEntity));
     tpf.registerEntityClass('BulletPickup', entityCtx(BulletPickupEntity));
+    tpf.registerEntityClass('TombstonePickup', entityCtx(TombstonePickupEntity));
     tpf.registerEntityClass('Enemy', entityCtx(EnemyEntity));
     tpf.registerEntityClass('Boss', entityCtx(BossEntity));
     tpf.registerEntityClass('FireObstacle', entityCtx(FireObstacleEntity));
@@ -377,6 +397,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
         bossCatalog,
         fireImage,
         bossEffectImages,
+        this.tombstoneImage,
       );
       this.entityPool.setOnEnemyKill((x, y, z) => {
         sfxManager.playMonsterDie();
@@ -447,6 +468,31 @@ export class RunnerYatzyScene extends Phaser.Scene {
       this.entityPool,
     );
 
+    this.tombstoneDirector = new TombstoneDirector(
+      () => this.player,
+      () => tpf.getGameState(),
+      this.session,
+      this.entityPool,
+    );
+    void this.tombstoneDirector.hydrate();
+
+    this.tombstonePickupFlow = new TombstonePickupFlow(
+      this.session,
+      this.tombstoneDirector,
+      this.coinSystem,
+      this.runState,
+    );
+    this.entityPool.setOnTombstonePickup((ent) => {
+      void this.tombstonePickupFlow?.onPickup(ent);
+    });
+
+    feverTimeSystem.setOnChange((active, warn, blinkOn) => {
+      gunViewDom.setFeverVisual(active, warn, blinkOn);
+      if (!active) {
+        this.runState.setFeverInfiniteAmmo(false);
+      }
+    });
+
     this.weaponFireSystem = new WeaponFireSystem(
       this.projectilePool,
       this.homingMissilePool,
@@ -485,6 +531,17 @@ export class RunnerYatzyScene extends Phaser.Scene {
         }
       });
       this.comboScore.flushOnDeath();
+      const { highScore, isNewRecord } = highScoreStore.tryUpdate(this.session.survivalScore);
+      if (isNewRecord) {
+        void tombstoneClient
+          .upsertOnDeath({
+            score: this.session.survivalScore,
+            triggerMs: this.session.runElapsedMs,
+            coinsAtDeath: this.coinSystem.coins,
+            deathReasonId: pickDeathReasonForRun(),
+          })
+          .catch((err) => console.warn('tombstone upsert failed', err));
+      }
       if (this.player) {
         updateStatusHud({
           score: this.session.survivalScore,
@@ -500,6 +557,8 @@ export class RunnerYatzyScene extends Phaser.Scene {
           coins: this.coinSystem.coins,
           kills: this.session.enemyKills,
           elapsedMs: this.session.runElapsedMs,
+          highScore,
+          isNewRecord,
         },
         () => {
           this.scene.restart();
@@ -657,6 +716,8 @@ export class RunnerYatzyScene extends Phaser.Scene {
 
     this.comboScore.tick(dt, this.session.isGameplayFrozen);
 
+    feverTimeSystem.tick(dt);
+
     if (this.player) {
       updateStatusHud({
         score: this.session.survivalScore,
@@ -669,6 +730,8 @@ export class RunnerYatzyScene extends Phaser.Scene {
       this.worldScroller?.update();
       this.bossDirector?.tick(dt);
       this.spawnDirector?.update(dt);
+      this.tombstoneDirector?.update();
+      this.tombstonePickupFlow?.tryPending(this.player?.pos.y ?? 0);
       this.combat?.update(dt);
     } else if (this.session.freezeReason === 'dead') {
       this.syncDeadCamera();
@@ -682,6 +745,12 @@ export class RunnerYatzyScene extends Phaser.Scene {
 
     // 야찌 UI freeze 중에도 VFX(뉴클리어 폭발 등)는 tpf.update로 재생
     this.tpf.update(dt);
+
+    const cam = this.tpf.getCamera();
+    const gs = this.tpf.getGameState();
+    if (cam && gs) {
+      syncTombstoneLabels(cam, gs.entities);
+    }
   }
 
   private syncDeadCamera(): void {
@@ -690,6 +759,8 @@ export class RunnerYatzyScene extends Phaser.Scene {
     if (!cam) return;
     cam.setPosition(this.player.pos.x + this.player.size.x / 2, this.player.pos.y + this.player.size.y / 2, 0);
     cam.setRotation(0, 0, this.player.fixedAngle);
+    const gs = this.tpf.getGameState();
+    if (gs) syncTombstoneLabels(cam, gs.entities);
   }
 
   private syncGameContext(deltaMs: number): void {

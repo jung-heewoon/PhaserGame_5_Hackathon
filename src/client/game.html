@@ -361,6 +361,7 @@
         <div id="floating-damage-layer" aria-hidden="true"></div>
         <div id="combo-settle-layer" aria-hidden="true"></div>
         <div id="coin-fly-layer" aria-hidden="true"></div>
+        <div id="tombstone-label-layer" class="tombstone-label-layer" aria-hidden="true"></div>
         <div id="pickup-fly-layer" aria-hidden="true"></div>
         <div id="gameover-modal" class="doom-modal hidden">
           <aside
@@ -520,6 +521,50 @@
                 UPGRADE
               </button>
             </div>
+          </div>
+        </div>
+        <div id="tombstone-reward-modal" class="doom-modal hidden">
+          <div class="doom-modal__panel doom-modal__panel--tombstone">
+            <h2 class="tombstone-reward__title" data-i18n="tombstone.title">
+              TOMBSTONE!
+            </h2>
+            <p id="tombstone-reward-message" class="tombstone-reward__message"></p>
+            <p id="tombstone-reward-coins" class="tombstone-reward__coins"></p>
+            <div class="tombstone-reward__tabs">
+              <button
+                id="tombstone-reward-tab-prev"
+                type="button"
+                class="tombstone-reward__tab-btn"
+                aria-label="Previous"
+              >
+                ‹
+              </button>
+              <span
+                id="tombstone-reward-tab-counter"
+                class="tombstone-reward__tab-counter"
+              ></span>
+              <button
+                id="tombstone-reward-tab-next"
+                type="button"
+                class="tombstone-reward__tab-btn"
+                aria-label="Next"
+              >
+                ›
+              </button>
+            </div>
+            <div
+              id="tombstone-reward-dice-row"
+              class="tombstone-reward__dice-row"
+              aria-hidden="true"
+            ></div>
+            <button
+              id="tombstone-reward-continue-btn"
+              type="button"
+              class="doom-btn tombstone-reward__continue"
+              data-i18n="tombstone.continue"
+            >
+              CONTINUE
+            </button>
           </div>
         </div>
         <div id="boss-chest-modal" class="doom-modal boss-chest-modal hidden">

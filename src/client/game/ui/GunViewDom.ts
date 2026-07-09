@@ -479,6 +479,13 @@ export class GunViewDom {
     }
   }
 
+  setFeverVisual(active: boolean, warn: boolean, blinkOn: boolean): void {
+    if (!this.layer) return;
+    this.layer.classList.toggle('fever-active', active);
+    this.layer.classList.toggle('fever-warn', active && warn);
+    this.layer.classList.toggle('fever-blink-off', active && warn && !blinkOn);
+  }
+
   private hideAll(): void {
     this.clearSingleRecoil();
     this.stopAllMuzzleFlashes();

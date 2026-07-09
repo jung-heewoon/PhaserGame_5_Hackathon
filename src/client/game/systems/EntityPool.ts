@@ -8,6 +8,7 @@ import { RUN_GAME_CONFIG } from '../config/RunGameConfig.ts';
 import DicePickupEntity from '../entities/DicePickupEntity.ts';
 import HeartPickupEntity from '../entities/HeartPickupEntity.ts';
 import BulletPickupEntity from '../entities/BulletPickupEntity.ts';
+import TombstonePickupEntity from '../entities/TombstonePickupEntity.ts';
 import DamageNumberEntity from '../entities/DamageNumberEntity.ts';
 import EnemyEntity, { type EnemySpawnParams } from '../entities/EnemyEntity.ts';
 import BossEntity, { type BossSpawnParams } from '../entities/BossEntity.ts';
@@ -33,6 +34,10 @@ import type { HomingMissilePool } from './HomingMissilePool.ts';
 import type { DamageNumberVfx } from './DamageNumberVfx.ts';
 import type { RunSession } from './RunSession.ts';
 import type { PickupKind } from '../config/PickupFlyConfig.ts';
+import { unregisterTombstoneLabel } from '../ui/TombstoneLabelDom.ts';
+import { TOMBSTONE_CONFIG } from '../config/TombstoneConfig.ts';
+import { tombstoneSpawnX } from '../config/TombstoneConfig.ts';
+import type { TombstoneRecord } from '../../../shared/tombstone.ts';
 
 const STASH_X = -9999;
 const STASH_Y = -9999;
@@ -41,6 +46,7 @@ export class EntityPool {
   private dicePool: DicePickupEntity[] = [];
   private heartPool: HeartPickupEntity[] = [];
   private bulletPool: BulletPickupEntity[] = [];
+  private tombstonePool: TombstonePickupEntity[] = [];
   private enemyPool: EnemyEntity[] = [];
   private bossPool: BossEntity[] = [];
   private firePool: FireObstacleEntity[] = [];
@@ -53,6 +59,7 @@ export class EntityPool {
   private diceImage: ImageInfo | null = null;
   private heartImage: ImageInfo | null = null;
   private bulletImage: ImageInfo | null = null;
+  private tombstoneImage: ImageInfo | null = null;
   private enemyCatalog: EnemyCatalog | null = null;
   private bossCatalog: BossCatalog | null = null;
   private fireImage: ImageInfo | null = null;
@@ -65,6 +72,7 @@ export class EntityPool {
   private beamFlashPool: BeamFlashPool | null = null;
   private onEnemyKill: ((x: number, y: number, z: number) => void) | null = null;
   private onPickup: ((kind: PickupKind, x: number, y: number, z: number) => void) | null = null;
+  private onTombstonePickup: ((ent: TombstonePickupEntity) => void) | null = null;
 
   dispose(): void {
     this.hitEffectVfx?.releaseAll();
@@ -72,6 +80,7 @@ export class EntityPool {
     this.dicePool = [];
     this.heartPool = [];
     this.bulletPool = [];
+    this.tombstonePool = [];
     this.enemyPool = [];
     this.bossPool = [];
     this.firePool = [];
@@ -83,6 +92,7 @@ export class EntityPool {
     this.diceImage = null;
     this.heartImage = null;
     this.bulletImage = null;
+    this.tombstoneImage = null;
     this.enemyCatalog = null;
     this.bossCatalog = null;
     this.fireImage = null;
@@ -95,6 +105,11 @@ export class EntityPool {
     this.beamFlashPool = null;
     this.onEnemyKill = null;
     this.onPickup = null;
+    this.onTombstonePickup = null;
+  }
+
+  setOnTombstonePickup(callback: ((ent: TombstonePickupEntity) => void) | null): void {
+    this.onTombstonePickup = callback;
   }
 
   setOnEnemyKill(callback: ((x: number, y: number, z: number) => void) | null): void {
@@ -110,6 +125,10 @@ export class EntityPool {
   /** 픽업 성공 시에만 호출 (스크롤 정리 despawn 과 구분) */
   notifyPickup(kind: PickupKind, x: number, y: number, z: number): void {
     this.onPickup?.(kind, x, y, z);
+  }
+
+  notifyTombstonePickup(ent: TombstonePickupEntity): void {
+    this.onTombstonePickup?.(ent);
   }
 
   setProjectilePools(
@@ -136,6 +155,7 @@ export class EntityPool {
     bossCatalog?: BossCatalog | null,
     fireImage?: ImageInfo | null,
     bossEffectImages?: BossEffectImages | null,
+    tombstoneImage?: ImageInfo | null,
   ): void {
     this.gs = gs;
     this.session = session;
@@ -143,6 +163,7 @@ export class EntityPool {
     this.diceImage = diceImage;
     this.heartImage = heartImage;
     this.bulletImage = bulletImage;
+    this.tombstoneImage = tombstoneImage ?? null;
     this.enemyCatalog = enemyCatalog;
     this.bossCatalog = bossCatalog ?? null;
     this.fireImage = fireImage ?? null;
@@ -187,6 +208,17 @@ export class EntityPool {
         session,
       }) as BulletPickupEntity;
       this.releaseBullet(bullet);
+    }
+
+    if (this.tombstoneImage) {
+      for (let i = 0; i < TOMBSTONE_CONFIG.poolSize; i++) {
+        const tomb = gs.spawnEntity(TombstonePickupEntity, STASH_X, STASH_Y, {
+          entityPool: this,
+          pickupImage: this.tombstoneImage,
+          session,
+        }) as TombstonePickupEntity;
+        this.releaseTombstone(tomb);
+      }
     }
 
     if (this.bossCatalog) {
@@ -256,6 +288,13 @@ export class EntityPool {
     if (this.bulletPool.includes(ent)) return;
     this.deactivate(ent);
     this.bulletPool.push(ent);
+  }
+
+  releaseTombstone(ent: TombstonePickupEntity): void {
+    if (this.tombstonePool.includes(ent)) return;
+    unregisterTombstoneLabel(ent);
+    this.deactivateTombstone(ent);
+    this.tombstonePool.push(ent);
   }
 
   releaseEnemy(ent: EnemyEntity, fromPlayerKill = false): void {
@@ -385,6 +424,16 @@ export class EntityPool {
     const ent = this.bulletPool.pop();
     if (!ent) return this.spawnBulletFallback(x, y);
     return this.activateBullet(ent, x, y);
+  }
+
+  acquireTombstone(
+    y: number,
+    record: TombstoneRecord,
+    isOwn: boolean,
+  ): TombstonePickupEntity | null {
+    const ent = this.tombstonePool.pop();
+    if (!ent) return this.spawnTombstoneFallback(y, record, isOwn);
+    return this.activateTombstone(ent, y, record, isOwn);
   }
 
   acquireEnemy(x: number, y: number, spawn: EnemySpawnParams): EnemyEntity | null {
@@ -714,6 +763,73 @@ export class EntityPool {
       session: this.session,
     });
     return ent as HeartPickupEntity;
+  }
+
+  private deactivateTombstone(ent: TombstonePickupEntity): void {
+    ent.vel.x = 0;
+    ent.vel.y = 0;
+    ent.vel.z = 0;
+    ent.pos.x = STASH_X;
+    ent.pos.y = STASH_Y;
+    ent.pos.z = 0;
+    ent.last.x = STASH_X;
+    ent.last.y = STASH_Y;
+    ent.checkAgainst = TPFEntity.TYPE.NONE;
+    ent.type = TPFEntity.TYPE.NONE;
+    ent.collides = TPFEntity.COLLIDES.NEVER;
+    ent.record = null;
+    ent.isOwn = false;
+    ent.collecting = false;
+    ent._killed = true;
+    ent.remove();
+    ent.updateQuad();
+  }
+
+  private activateTombstone(
+    ent: TombstonePickupEntity,
+    y: number,
+    record: TombstoneRecord,
+    isOwn: boolean,
+  ): TombstonePickupEntity {
+    const x = tombstoneSpawnX();
+    ent._killed = false;
+    ent.checkAgainst = TPFEntity.TYPE.A;
+    ent.type = TPFEntity.TYPE.NONE;
+    ent.collides = TPFEntity.COLLIDES.NEVER;
+    ent.record = record;
+    ent.isOwn = isOwn;
+    ent.pos.x = x;
+    ent.pos.y = y;
+    ent.pos.z = 0;
+    ent.last.x = x;
+    ent.last.y = y;
+    ent.vel.x = 0;
+    ent.vel.y = 0;
+    ent.vel.z = 0;
+    ent.init(x, y, { record, isOwn });
+    ent.updateQuad();
+    this.ensureInGameState(ent);
+    if (ent.context.culledSectors) {
+      ent.context.culledSectors.moveEntity(ent);
+    }
+    return ent;
+  }
+
+  private spawnTombstoneFallback(
+    y: number,
+    record: TombstoneRecord,
+    isOwn: boolean,
+  ): TombstonePickupEntity | null {
+    if (!this.gs || !this.session) return null;
+    const x = tombstoneSpawnX();
+    const ent = this.gs.spawnEntity(TombstonePickupEntity, x, y, {
+      entityPool: this,
+      pickupImage: this.tombstoneImage,
+      session: this.session,
+      record,
+      isOwn,
+    });
+    return ent as TombstonePickupEntity;
   }
 
   private spawnBulletFallback(x: number, y: number): BulletPickupEntity | null {
