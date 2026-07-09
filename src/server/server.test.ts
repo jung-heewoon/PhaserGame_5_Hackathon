@@ -5,17 +5,25 @@ import {after, before, beforeEach, test} from 'node:test'
 import {type Context, reddit, redis, runWithContext} from '@devvit/web/server'
 import {
   type ClaimTombstonesRsp,
+  type ContributeWeeklyDefenseRsp,
   Endpoint,
   type ErrorRsp,
   type GetLeaderboardRsp,
   type GetPersistenceBulkRsp,
   type GetTombstonesRsp,
+  type GetWeeklyDefenseRsp,
   type SetPersistenceReq,
   type SetPersistenceRsp,
   type SubmitLeaderboardRsp,
   type UpsertTombstoneRsp,
 } from '../shared/api.ts'
+import {
+  mondayUtcWeekStartMs,
+  validateRunKills,
+  WEEKLY_DEFENSE_CONFIG,
+} from '../shared/weeklyDefense.ts'
 import {onReq} from './server.ts'
+import {setWeeklyDefenseNowMsForTests} from './weeklyDefense.ts'
 
 type ZMember = {member: string; score: number}
 
@@ -169,6 +177,7 @@ beforeEach(() => {
   redisValues.clear()
   redisHashes.clear()
   redisSortedSets.clear()
+  setWeeklyDefenseNowMsForTests(undefined)
 })
 
 test('get persistence bulk', async () => {
@@ -302,6 +311,8 @@ test('upsert tombstone and list', async () => {
       triggerMs: 120000,
       coinsAtDeath: 350,
       deathReasonId: 0,
+      monsterKills: 142,
+      bossKills: 1,
     }),
     headers: {'Content-Type': 'application/json'},
     method: 'POST',
@@ -327,6 +338,8 @@ test('upsert tombstone keeps higher trigger only', async () => {
       triggerMs: 200000,
       coinsAtDeath: 10,
       deathReasonId: 1,
+      monsterKills: 50,
+      bossKills: 2,
     }),
     headers: {'Content-Type': 'application/json'},
     method: 'POST',
@@ -337,6 +350,8 @@ test('upsert tombstone keeps higher trigger only', async () => {
       triggerMs: 50000,
       coinsAtDeath: 99,
       deathReasonId: 2,
+      monsterKills: 10,
+      bossKills: 0,
     }),
     headers: {'Content-Type': 'application/json'},
     method: 'POST',
@@ -380,6 +395,8 @@ test('claim rejects own tombstone', async () => {
       triggerMs: 10000,
       coinsAtDeath: 50,
       deathReasonId: 0,
+      monsterKills: 5,
+      bossKills: 0,
     }),
     headers: {'Content-Type': 'application/json'},
     method: 'POST',
@@ -394,4 +411,119 @@ test('claim rejects own tombstone', async () => {
     error: 'cannot claim own tombstone',
     status: 400,
   })
+})
+
+test('validateRunKills clamps by elapsed time', () => {
+  const mild = validateRunKills({
+    monsterKills: 200,
+    runElapsedMs: 10_000,
+  })
+  assert.equal(mild.acceptedMonsterKills, 120)
+  assert.equal(mild.rejected, false)
+
+  const absurd = validateRunKills({
+    monsterKills: 9999,
+    runElapsedMs: 10_000,
+  })
+  assert.equal(absurd.acceptedMonsterKills, 0)
+  assert.equal(absurd.rejected, true)
+  assert.equal(absurd.reason, 'absurd')
+})
+
+test('get weekly defense status initial', async () => {
+  const rsp = await fetch(`${serverURL}/${Endpoint.GetWeeklyDefense}`)
+  assert.equal(rsp.status, 200)
+  const body = (await rsp.json()) as GetWeeklyDefenseRsp
+  assert.equal(body.kills, 0)
+  assert.equal(body.target, WEEKLY_DEFENSE_CONFIG.baseTarget)
+  assert.equal(body.buffActive, false)
+  assert.equal(body.percent, 0)
+})
+
+test('contribute weekly defense accumulates kills', async () => {
+  const rsp = await fetch(`${serverURL}/${Endpoint.ContributeWeeklyDefense}`, {
+    body: JSON.stringify({
+      monsterKills: 300,
+      runElapsedMs: 60_000,
+      bossKills: 1,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(rsp.status, 200)
+  const body = (await rsp.json()) as ContributeWeeklyDefenseRsp
+  assert.equal(body.contributed, 300)
+  assert.equal(body.kills, 300)
+  assert.equal(body.rejected, false)
+})
+
+test('contribute rejects absurd kill spam', async () => {
+  const rsp = await fetch(`${serverURL}/${Endpoint.ContributeWeeklyDefense}`, {
+    body: JSON.stringify({
+      monsterKills: 9999,
+      runElapsedMs: 10_000,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  const body = (await rsp.json()) as ContributeWeeklyDefenseRsp
+  assert.equal(body.contributed, 0)
+  assert.equal(body.rejected, true)
+  assert.equal(body.kills, 0)
+})
+
+test('contribute short run yields zero kills', async () => {
+  const rsp = await fetch(`${serverURL}/${Endpoint.ContributeWeeklyDefense}`, {
+    body: JSON.stringify({
+      monsterKills: 50,
+      runElapsedMs: 1000,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  const body = (await rsp.json()) as ContributeWeeklyDefenseRsp
+  assert.equal(body.contributed, 0)
+})
+
+test('weekly lazy reset on success increases target and enables buff', async () => {
+  const thisWeek = mondayUtcWeekStartMs()
+  const lastWeek = thisWeek - 7 * 24 * 60 * 60 * 1000
+  redisValues.set('global:kills', '15000')
+  redisValues.set('global:target', '10000')
+  redisValues.set('global:buff_active', '0')
+  redisValues.set('global:last_reset_ms', String(lastWeek))
+
+  setWeeklyDefenseNowMsForTests(thisWeek + 60_000)
+
+  const rsp = await fetch(`${serverURL}/${Endpoint.GetWeeklyDefense}`)
+  const body = (await rsp.json()) as GetWeeklyDefenseRsp
+  assert.equal(body.kills, 0)
+  assert.equal(body.buffActive, true)
+  assert.equal(body.target, 15_000)
+})
+
+test('weekly lazy reset on failure lowers target and disables buff', async () => {
+  const thisWeek = mondayUtcWeekStartMs()
+  const lastWeek = thisWeek - 7 * 24 * 60 * 60 * 1000
+  redisValues.set('global:kills', '5000')
+  redisValues.set('global:target', '10000')
+  redisValues.set('global:buff_active', '1')
+  redisValues.set('global:last_reset_ms', String(lastWeek))
+
+  setWeeklyDefenseNowMsForTests(thisWeek + 60_000)
+
+  const rsp = await fetch(`${serverURL}/${Endpoint.GetWeeklyDefense}`)
+  const body = (await rsp.json()) as GetWeeklyDefenseRsp
+  assert.equal(body.kills, 0)
+  assert.equal(body.buffActive, false)
+  assert.equal(body.target, 7000)
+})
+
+test('contribute requires runElapsedMs', async () => {
+  const rsp = await fetch(`${serverURL}/${Endpoint.ContributeWeeklyDefense}`, {
+    body: JSON.stringify({monsterKills: 10}),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(rsp.status, 400)
 })

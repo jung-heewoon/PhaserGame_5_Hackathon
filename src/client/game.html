@@ -522,6 +522,131 @@
               </button>
             </div>
           </div>
+          <aside
+            id="gameover-weekly-defense"
+            class="weekly-defense-card hidden"
+            role="button"
+            tabindex="0"
+            aria-label="Weekly defense status"
+          >
+            <h3
+              class="weekly-defense-card__title"
+              data-i18n="weeklyDefense.clearProgress"
+            >
+              CLEAR PROGRESS
+            </h3>
+            <div class="weekly-defense-card__vtrack" aria-hidden="true">
+              <div
+                id="weekly-defense-gauge-fill"
+                class="weekly-defense-card__vfill"
+              ></div>
+            </div>
+            <span id="weekly-defense-percent" class="weekly-defense-card__percent"
+              >0%</span
+            >
+            <p
+              class="weekly-defense-card__hint"
+              data-i18n="weeklyDefense.tapDetail"
+            >
+              TAP FOR DETAILS
+            </p>
+          </aside>
+        </div>
+        <div
+          id="weekly-defense-detail-modal"
+          class="doom-modal weekly-defense-detail hidden"
+        >
+          <div class="doom-modal__panel weekly-defense-detail__panel">
+            <button
+              id="weekly-defense-detail-close"
+              type="button"
+              class="weekly-defense-detail__close"
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2
+              class="weekly-defense-detail__title"
+              data-i18n="weeklyDefense.detailTitle"
+            >
+              OPERATION BRIEFING
+            </h2>
+            <p
+              class="weekly-defense-detail__subtitle"
+              data-i18n="weeklyDefense.detailSubtitle"
+            >
+              Subreddit weekly invasion defense status
+            </p>
+            <div class="weekly-defense-detail__gauge-wrap">
+              <div class="weekly-defense-detail__gauge" aria-hidden="true">
+                <div
+                  id="weekly-defense-detail-gauge-fill"
+                  class="weekly-defense-detail__gauge-fill"
+                ></div>
+              </div>
+              <span
+                id="weekly-defense-detail-percent"
+                class="weekly-defense-detail__percent"
+                >0%</span
+              >
+            </div>
+            <section
+              id="weekly-defense-detail-reward"
+              class="weekly-defense-detail__reward"
+            >
+              <span
+                id="weekly-defense-detail-reward-badge"
+                class="weekly-defense-detail__reward-badge"
+                data-i18n="weeklyDefense.rewardPendingBadge"
+                >UNLOCK ON CLEAR</span
+              >
+              <div class="weekly-defense-detail__reward-main">
+                <div
+                  id="weekly-defense-detail-dice-icon"
+                  class="weekly-defense-detail__dice-icon"
+                  aria-hidden="true"
+                ></div>
+                <div class="weekly-defense-detail__reward-text">
+                  <span
+                    id="weekly-defense-detail-reward-amount"
+                    class="weekly-defense-detail__reward-amount"
+                    >+100</span
+                  >
+                  <p
+                    id="weekly-defense-detail-reward-label"
+                    class="weekly-defense-detail__reward-label"
+                  ></p>
+                </div>
+              </div>
+              <p
+                id="weekly-defense-detail-reward-desc"
+                class="weekly-defense-detail__reward-desc"
+              ></p>
+            </section>
+            <dl class="weekly-defense-detail__stats">
+              <div class="weekly-defense-detail__row">
+                <dt data-i18n="weeklyDefense.kills">KILLS</dt>
+                <dd id="weekly-defense-detail-kills">0</dd>
+              </div>
+              <div class="weekly-defense-detail__row">
+                <dt data-i18n="weeklyDefense.target">TARGET</dt>
+                <dd id="weekly-defense-detail-target">0</dd>
+              </div>
+              <div class="weekly-defense-detail__row">
+                <dt data-i18n="weeklyDefense.buffStatus">BUFF</dt>
+                <dd id="weekly-defense-detail-buff" data-i18n="weeklyDefense.buffInactive">
+                  INACTIVE
+                </dd>
+              </div>
+            </dl>
+            <p
+              id="weekly-defense-detail-reset"
+              class="weekly-defense-detail__reset"
+              data-i18n="weeklyDefense.resetHint"
+            >
+              Resets every Monday 00:00 UTC
+            </p>
+          </div>
         </div>
         <div id="tombstone-reward-modal" class="doom-modal hidden">
           <div class="doom-modal__panel doom-modal__panel--tombstone">

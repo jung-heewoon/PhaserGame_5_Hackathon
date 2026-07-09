@@ -12,6 +12,11 @@ import {
   tombstoneCoinBonus,
 } from '../shared/tombstone.ts'
 import {DUMMY_TOMBSTONE_SEEDS} from '../shared/tombstoneDummies.ts'
+import {
+  formatDefenseGaugeBar,
+  validateRunKills,
+} from '../shared/weeklyDefense.ts'
+import {getWeeklyDefenseStatus} from './weeklyDefense.ts'
 
 function tombstoneKey(postId: string): string {
   return `tombstone:post:${postId}`
@@ -108,6 +113,8 @@ async function submitTombstoneComment(
   username: string,
   postId: string,
   record: TombstoneRecord,
+  runMonsterKills: number,
+  runBossKills: number,
 ): Promise<void> {
   if (!context.postId) return
 
@@ -115,10 +122,28 @@ async function submitTombstoneComment(
   const already = await redis.get(idemKey)
   if (already) return
 
+  const validation = validateRunKills({
+    monsterKills: runMonsterKills,
+    bossKills: runBossKills,
+    runElapsedMs: record.triggerMs,
+  })
+  const monsterKills = validation.acceptedMonsterKills
+  const bossKills = validation.acceptedBossKills
+
+  const weekly = await getWeeklyDefenseStatus()
+  const gaugeBar = formatDefenseGaugeBar(weekly.percent)
+  const percentStr = weekly.percent.toFixed(1)
   const reason = deathReasonCommentText(record.deathReasonId)
+
   const text =
-    `🪦 [${username}]님이 방금 무한 런 도중 [${record.score.toLocaleString()}점]에서 [${reason}] 전사하며 새로운 비석을 세웠습니다! ` +
-    '다음 도전자여, 이 비석을 밟고 넘어가십시오!'
+    `🪦 [${username}] 요원의 전사 보고서\n\n` +
+    `[개인 기록]\n` +
+    `이번 작전에서 외계 괴수 [${monsterKills.toLocaleString()}마리] 소탕, 중형 보스 [${bossKills}기] 격추!\n` +
+    `통산 최고 기록을 **[${record.score.toLocaleString()}점]**으로 경신하며 고지에 비석을 세웠습니다.\n` +
+    `(사망 사유): ${reason}.\n\n` +
+    `[전체 전황]\n` +
+    `현재 서브레딧 주간 누적 킬 수: ${weekly.kills.toLocaleString()} / ${weekly.target.toLocaleString()}\n` +
+    `이번 주 침공 방어율: ${gaugeBar} ${percentStr}%`
 
   const api = reddit as RedditCommentApi
   if (typeof api.submitComment !== 'function') {
@@ -166,6 +191,8 @@ export async function upsertTombstone(
     0,
     Math.min(DEATH_REASON_COUNT - 1, Math.floor(req.deathReasonId)),
   )
+  const monsterKills = Math.max(0, Math.floor(req.monsterKills))
+  const bossKills = Math.max(0, Math.floor(req.bossKills))
 
   const resolvedPost = resolveTombstonePostKey(postId)
   const key = tombstoneKey(resolvedPost)
@@ -197,7 +224,13 @@ export async function upsertTombstone(
   })
 
   try {
-    await submitTombstoneComment(username, resolvedPost, stored)
+    await submitTombstoneComment(
+      username,
+      resolvedPost,
+      stored,
+      monsterKills,
+      bossKills,
+    )
   } catch (err) {
     console.error('tombstone comment failed', err)
   }

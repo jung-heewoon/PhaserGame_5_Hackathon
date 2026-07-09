@@ -2,6 +2,7 @@
 export type ErrorRsp = {error: string; status: number}
 
 import type {TombstoneRecord} from './tombstone.ts'
+import type {WeeklyDefenseStatus} from './weeklyDefense.ts'
 
 /** Bulk persistence values for the current user. */
 export type GetPersistenceBulkRsp = {values: Record<string, string>}
@@ -43,12 +44,28 @@ export type GetTombstonesRsp = {
   tombstones: TombstoneRecord[]
 }
 
+/** Weekly subreddit defense status (lazy reset on read). */
+export type GetWeeklyDefenseRsp = WeeklyDefenseStatus
+
+/** Contribute run monster kills to the weekly global pool. */
+export type ContributeWeeklyDefenseReq = {
+  monsterKills: number
+  runElapsedMs: number
+  bossKills?: number
+}
+export type ContributeWeeklyDefenseRsp = WeeklyDefenseStatus & {
+  contributed: number
+  rejected?: boolean
+}
+
 /** Upsert the current user's tombstone on new survival record. */
 export type UpsertTombstoneReq = {
   score: number
   triggerMs: number
   coinsAtDeath: number
   deathReasonId: number
+  monsterKills: number
+  bossKills: number
 }
 export type UpsertTombstoneRsp = {
   ok: true
@@ -73,6 +90,8 @@ export const Endpoint = {
   GetTombstones: 'api/tombstone/list',
   UpsertTombstone: 'api/tombstone/upsert',
   ClaimTombstones: 'api/tombstone/claim',
+  GetWeeklyDefense: 'api/weekly-defense/status',
+  ContributeWeeklyDefense: 'api/weekly-defense/contribute',
   OnAppInstall: 'internal/on/app/install',
   OnMenuNewPost: 'internal/on/menu/new-post',
 } as const
@@ -85,6 +104,8 @@ export const EndpointMethod = {
   [Endpoint.GetTombstones]: 'GET',
   [Endpoint.UpsertTombstone]: 'POST',
   [Endpoint.ClaimTombstones]: 'POST',
+  [Endpoint.GetWeeklyDefense]: 'GET',
+  [Endpoint.ContributeWeeklyDefense]: 'POST',
   [Endpoint.OnAppInstall]: 'POST',
   [Endpoint.OnMenuNewPost]: 'POST',
 } as const satisfies {[endpoint: string]: 'GET' | 'POST'}

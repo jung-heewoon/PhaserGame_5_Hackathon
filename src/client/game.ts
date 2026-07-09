@@ -11,6 +11,7 @@ import '@game/ui/yatzy-modal.css'
 import '@game/ui/mobile-controls.css'
 import '@game/ui/tutorial-modal.css'
 import '@game/ui/tombstone-reward.css'
+import '@game/ui/weekly-defense.css'
 import {
   applyViewportLayout,
   bindViewportLayout,
@@ -25,6 +26,8 @@ import {
 } from '@game/platform/reddit/browserGuards.ts'
 import {redditLifecycle} from '@game/platform/reddit/RedditLifecycle.ts'
 import {gamePersistence} from '@game/platform/reddit/RedditPersistence.ts'
+import {weeklyDefenseClient} from '@game/platform/reddit/WeeklyDefenseClient.ts'
+import {weeklyDefenseBootState} from '@game/systems/WeeklyDefenseBootState.ts'
 import {bgmManager} from '@game/systems/BgmManager.ts'
 import {highScoreStore} from '@game/systems/HighScoreStore.ts'
 import {sfxManager} from '@game/systems/SfxManager.ts'
@@ -41,12 +44,19 @@ import {initPlayerDamageFlash} from '@game/ui/PlayerDamageFlashDom.ts'
 import {initDiceHud} from '@game/ui/RunHudDom.ts'
 import {initTombstoneRewardModal} from '@game/ui/TombstoneRewardModalDom.ts'
 import {initUpgradeModal} from '@game/ui/UpgradeModalDom.ts'
+import {initWeeklyDefenseGameOver} from '@game/ui/WeeklyDefenseGameOverDom.ts'
 
 async function main(): Promise<void> {
   installBrowserGuards()
   applyViewportLayout()
   bindViewportLayout()
   await gamePersistence.hydrate()
+  try {
+    const status = await weeklyDefenseClient.fetchStatus()
+    weeklyDefenseBootState.set(status)
+  } catch (err) {
+    console.warn('weekly-defense status fetch failed', err)
+  }
   redditLifecycle.loadingStart()
 
   upgradeStore.hydrate()
@@ -67,6 +77,7 @@ async function main(): Promise<void> {
   initPickupFly()
   initUpgradeModal()
   initTombstoneRewardModal()
+  initWeeklyDefenseGameOver()
   mobileControls.init()
   domUiBridge.init()
 

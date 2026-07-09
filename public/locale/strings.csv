@@ -39,6 +39,24 @@ gameover.kills,처치,KILLS
 gameover.coins,획득 코인,COINS
 gameover.retry,다시하기,RETRY
 gameover.upgrade,업그레이드,UPGRADE
+weeklyDefense.title,방어군 작전,DEFENSE OPS
+weeklyDefense.clearProgress,클리어 현황,CLEAR PROGRESS
+weeklyDefense.percent,{percent}%,{percent}%
+weeklyDefense.kills,누적 처치,KILLS
+weeklyDefense.target,주간 목표,TARGET
+weeklyDefense.buffActive,보너스 주사위,BONUS DICE
+weeklyDefense.buffInactive,비활성,INACTIVE
+weeklyDefense.buffStatus,다음 주 버프,NEXT WEEK BUFF
+weeklyDefense.detailTitle,작전 브리핑,OPERATION BRIEFING
+weeklyDefense.detailSubtitle,서브레딧 주간 침공 방어 현황,Subreddit weekly invasion defense
+weeklyDefense.tapDetail,탭하여 상세 보기,TAP FOR DETAILS
+weeklyDefense.resetHint,매주 월요일 00:00 (UTC)에 초기화됩니다,Resets every Monday 00:00 UTC
+weeklyDefense.rewardActiveBadge,보상 활성,REWARD ACTIVE
+weeklyDefense.rewardPendingBadge,달성 시 해금,UNLOCK ON CLEAR
+weeklyDefense.rewardActive,런 시작 보너스 주사위 {amount}개,Start with {amount} bonus dice
+weeklyDefense.rewardPending,목표 달성 시 주사위 {amount}개,Clear goal for {amount} dice
+weeklyDefense.rewardActiveDesc,지난주 방어 성공! 모든 요원이 다음 런 시작 시 보너스를 받습니다.,Last week's defense succeeded! All agents start runs with this bonus.
+weeklyDefense.rewardPendingDesc,남은 처치 {remaining} — 달성 시 다음 주 전원에게 지급됩니다.,{remaining} kills left — all agents receive this on success.
 leaderboard.title,랭킹,RANKING
 leaderboard.thread,이 스레드,THREAD
 leaderboard.global,👑 전체,👑 GLOBAL

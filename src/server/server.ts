@@ -9,12 +9,15 @@ import type {
 import {
   type ClaimTombstonesReq,
   type ClaimTombstonesRsp,
+  type ContributeWeeklyDefenseReq,
+  type ContributeWeeklyDefenseRsp,
   Endpoint,
   EndpointMethod,
   type ErrorRsp,
   type GetLeaderboardRsp,
   type GetPersistenceBulkRsp,
   type GetTombstonesRsp,
+  type GetWeeklyDefenseRsp,
   type SetPersistenceReq,
   type SetPersistenceRsp,
   type SubmitLeaderboardReq,
@@ -25,6 +28,10 @@ import {
 import {dbGetPersistenceBulk, dbGetUsername, dbSetPersistence} from './db.ts'
 import {getLeaderboards, submitLeaderboardScore} from './leaderboard.ts'
 import {claimTombstones, listTombstones, upsertTombstone} from './tombstone.ts'
+import {
+  contributeWeeklyDefense,
+  getWeeklyDefenseStatus,
+} from './weeklyDefense.ts'
 
 type AnyRsp =
   | GetPersistenceBulkRsp
@@ -34,6 +41,8 @@ type AnyRsp =
   | SubmitLeaderboardRsp
   | UpsertTombstoneRsp
   | ClaimTombstonesRsp
+  | GetWeeklyDefenseRsp
+  | ContributeWeeklyDefenseRsp
   | UiResponse
   | TriggerResponse
   | ErrorRsp
@@ -86,6 +95,12 @@ async function route(
         break
       case Endpoint.ClaimTombstones:
         rsp = await routeClaimTombstones(reqMsg)
+        break
+      case Endpoint.GetWeeklyDefense:
+        rsp = await routeGetWeeklyDefense()
+        break
+      case Endpoint.ContributeWeeklyDefense:
+        rsp = await routeContributeWeeklyDefense(reqMsg)
         break
       case Endpoint.OnMenuNewPost:
         rsp = await routeMenuNewPost()
@@ -157,10 +172,15 @@ async function routeUpsertTombstone(
     req.coinsAtDeath === undefined ||
     !Number.isFinite(req.coinsAtDeath) ||
     req.deathReasonId === undefined ||
-    !Number.isFinite(req.deathReasonId)
+    !Number.isFinite(req.deathReasonId) ||
+    req.monsterKills === undefined ||
+    !Number.isFinite(req.monsterKills) ||
+    req.bossKills === undefined ||
+    !Number.isFinite(req.bossKills)
   ) {
     return {
-      error: 'score, triggerMs, coinsAtDeath, deathReasonId required',
+      error:
+        'score, triggerMs, coinsAtDeath, deathReasonId, monsterKills, bossKills required',
       status: 400,
     }
   }
@@ -180,6 +200,33 @@ async function routeClaimTombstones(
   )
   if ('error' in result) return result
   return result
+}
+
+async function routeGetWeeklyDefense(): Promise<GetWeeklyDefenseRsp> {
+  return getWeeklyDefenseStatus()
+}
+
+async function routeContributeWeeklyDefense(
+  reqMsg: IncomingMessage,
+): Promise<ContributeWeeklyDefenseRsp | ErrorRsp> {
+  const req = await readJson<ContributeWeeklyDefenseReq>(reqMsg)
+  if (
+    req.monsterKills === undefined ||
+    !Number.isFinite(req.monsterKills) ||
+    req.runElapsedMs === undefined ||
+    !Number.isFinite(req.runElapsedMs)
+  ) {
+    return {error: 'monsterKills and runElapsedMs required', status: 400}
+  }
+  const username = await dbGetUsername()
+  return contributeWeeklyDefense(
+    {
+      monsterKills: req.monsterKills,
+      runElapsedMs: req.runElapsedMs,
+      bossKills: req.bossKills,
+    },
+    username,
+  )
 }
 
 async function routeMenuNewPost(): Promise<UiResponse> {

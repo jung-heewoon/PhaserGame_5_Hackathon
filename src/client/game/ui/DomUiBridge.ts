@@ -6,6 +6,7 @@ import { resetGunHudTracking, updateRunHud } from './RunHudDom.ts';
 import { refreshYatzyModalLocale } from './YatzyModalDom.ts';
 import { refreshBossChestModalLocale } from './BossChestModalDom.ts';
 import { refreshGameOverLeaderboardLocale } from './GameOverLeaderboardDom.ts';
+import { refreshWeeklyDefenseLocale } from './WeeklyDefenseGameOverDom.ts';
 import { refreshTutorialLocale } from './TutorialModalDom.ts';
 
 class DomUiBridgeImpl {
@@ -44,6 +45,7 @@ class DomUiBridgeImpl {
     refreshBossChestModalLocale();
     refreshTutorialLocale();
     refreshGameOverLeaderboardLocale();
+    refreshWeeklyDefenseLocale();
   }
 
   setLayerInteractive(on: boolean): void {

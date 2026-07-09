@@ -1,11 +1,16 @@
 import coinUrl from '../Image/UI/coin4_16x16.png';
 import {redditLifecycle} from '../platform/reddit/RedditLifecycle.ts';
 import { formatRunElapsed, highScoreStore } from '../systems/HighScoreStore.ts';
+import type { WeeklyDefenseStatus } from '../../../shared/weeklyDefense.ts';
 import { domUiBridge } from './DomUiBridge.ts';
 import {
   resetGameOverLeaderboard,
   showGameOverLeaderboard,
 } from './GameOverLeaderboardDom.ts';
+import {
+  resetWeeklyDefenseGameOver,
+  showWeeklyDefenseOnGameOver,
+} from './WeeklyDefenseGameOverDom.ts';
 import { showUpgradeModal } from './UpgradeModalDom.ts';
 
 export interface GameOverStats {
@@ -15,6 +20,7 @@ export interface GameOverStats {
   elapsedMs: number;
   highScore?: number;
   isNewRecord?: boolean;
+  weeklyDefense?: WeeklyDefenseStatus;
 }
 
 /** 숫자가 0 → target 으로 카운트업 되는 연출 지속 시간 */
@@ -87,6 +93,7 @@ export function showGameOverModal(stats: GameOverStats, onRetry: () => void): vo
   if (isNewRecord) redditLifecycle.happytime('newHighScore');
 
   showGameOverLeaderboard(highScore);
+  showWeeklyDefenseOnGameOver(stats.weeklyDefense);
 
   countToken += 1;
   const myToken = countToken;
@@ -103,6 +110,7 @@ export function showGameOverModal(stats: GameOverStats, onRetry: () => void): vo
     retryBtn.removeEventListener('click', onRetryClick);
     upgradeBtn?.removeEventListener('click', onUpgradeClick);
     resetGameOverLeaderboard();
+    resetWeeklyDefenseGameOver();
     setGameOverHudActive(false);
     modal.classList.add('hidden');
     domUiBridge.setLayerInteractive(false);

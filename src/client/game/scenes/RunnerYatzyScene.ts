@@ -87,6 +87,12 @@ import { TombstonePickupFlow, pickDeathReasonForRun } from '../systems/Tombstone
 import { feverTimeSystem } from '../systems/FeverTimeSystem.ts';
 import { highScoreStore } from '../systems/HighScoreStore.ts';
 import { tombstoneClient } from '../platform/reddit/TombstoneClient.ts';
+import { weeklyDefenseClient } from '../platform/reddit/WeeklyDefenseClient.ts';
+import { weeklyDefenseBootState } from '../systems/WeeklyDefenseBootState.ts';
+import {
+  validateRunKills,
+  WEEKLY_DEFENSE_CONFIG,
+} from '../../../shared/weeklyDefense.ts';
 import { clearTombstoneLabels, syncTombstoneLabels } from '../ui/TombstoneLabelDom.ts';
 import { YatzyFlowController } from '../systems/YatzyFlowController.ts';
 import { domUiBridge } from '../ui/DomUiBridge.ts';
@@ -190,6 +196,9 @@ export class RunnerYatzyScene extends Phaser.Scene {
     sfxManager.init(this);
     bgmManager.init(this);
     this.runState.reset();
+    if (weeklyDefenseBootState.buffActive) {
+      this.runState.addDice(WEEKLY_DEFENSE_CONFIG.buffBonusDice);
+    }
     this.session.reset();
     this.entityPool.dispose();
     this.hitEffectVfx.dispose();
@@ -532,6 +541,22 @@ export class RunnerYatzyScene extends Phaser.Scene {
       });
       this.comboScore.flushOnDeath();
       const { highScore, isNewRecord } = highScoreStore.tryUpdate(this.session.survivalScore);
+      const killPayload = {
+        monsterKills: this.session.enemyKills,
+        bossKills: this.session.bossClearCount,
+        runElapsedMs: this.session.runElapsedMs,
+      };
+      const validated = validateRunKills(killPayload);
+      const contributePromise = weeklyDefenseClient
+        .contribute({
+          monsterKills: validated.acceptedMonsterKills,
+          bossKills: validated.acceptedBossKills,
+          runElapsedMs: killPayload.runElapsedMs,
+        })
+        .catch((err) => {
+          console.warn('weekly-defense contribute failed', err);
+          return weeklyDefenseClient.getCached();
+        });
       if (isNewRecord) {
         void tombstoneClient
           .upsertOnDeath({
@@ -539,6 +564,8 @@ export class RunnerYatzyScene extends Phaser.Scene {
             triggerMs: this.session.runElapsedMs,
             coinsAtDeath: this.coinSystem.coins,
             deathReasonId: pickDeathReasonForRun(),
+            monsterKills: validated.acceptedMonsterKills,
+            bossKills: validated.acceptedBossKills,
           })
           .catch((err) => console.warn('tombstone upsert failed', err));
       }
@@ -551,19 +578,22 @@ export class RunnerYatzyScene extends Phaser.Scene {
       }
       // 이번 런에서 모은 코인을 영속 지갑에 합산 (사망당 1회)
       upgradeStore.addCoins(this.coinSystem.coins);
-      showGameOverModal(
-        {
-          score: this.session.survivalScore,
-          coins: this.coinSystem.coins,
-          kills: this.session.enemyKills,
-          elapsedMs: this.session.runElapsedMs,
-          highScore,
-          isNewRecord,
-        },
-        () => {
-          this.scene.restart();
-        },
-      );
+      void contributePromise.then((weeklyDefense) => {
+        showGameOverModal(
+          {
+            score: this.session.survivalScore,
+            coins: this.coinSystem.coins,
+            kills: this.session.enemyKills,
+            elapsedMs: this.session.runElapsedMs,
+            highScore,
+            isNewRecord,
+            weeklyDefense: weeklyDefense ?? undefined,
+          },
+          () => {
+            this.scene.restart();
+          },
+        );
+      });
     };
 
     tpf.createExtern(() => {
