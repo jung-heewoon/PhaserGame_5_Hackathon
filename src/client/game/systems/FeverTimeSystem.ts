@@ -1,6 +1,6 @@
 import { TOMBSTONE_CONFIG } from '../config/TombstoneConfig.ts';
 
-/** 비석 습득 후 피버타임 — 무적 + 무한 탄창 + 황금 연출 */
+/** 비석 습득 후 피버타임 — 무한 탄창 + 공격속도 +30% + 황금 총 연출 */
 export class FeverTimeSystem {
   private active = false;
   private remainingMs = 0;

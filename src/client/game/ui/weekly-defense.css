@@ -1,23 +1,27 @@
-/* Weekly defense — vertical mini gauge + detail modal (1280×720 design px) */
+/* Weekly defense — slim vertical gauge + detail modal (1280×720 design px) */
 
 #gameover-modal:not(.hidden) .weekly-defense-card {
   pointer-events: auto;
 }
 
+#gameover-modal:not(.hidden) {
+  gap: 16px;
+}
+
 .weekly-defense-card {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  width: 248px;
+  align-items: center;
+  width: 92px;
   height: 580px;
   flex-shrink: 0;
-  padding: 18px 20px 16px;
+  padding: 14px 8px 12px;
   box-sizing: border-box;
   border: 2px solid rgba(58, 58, 66, 0.85);
   background: linear-gradient(180deg, rgba(18, 10, 12, 0.94), rgba(8, 8, 10, 0.98));
   box-shadow:
-    inset 0 0 24px rgba(0, 0, 0, 0.85),
-    0 0 18px rgba(80, 0, 0, 0.2);
+    inset 0 0 20px rgba(0, 0, 0, 0.85),
+    0 0 14px rgba(80, 0, 0, 0.18);
   cursor: pointer;
   animation: weekly-defense-card-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.1s both;
   position: relative;
@@ -25,7 +29,7 @@
 
 @keyframes weekly-defense-card-in {
   0% {
-    transform: translateX(12px);
+    transform: translateX(10px);
     opacity: 0;
   }
   100% {
@@ -62,55 +66,84 @@
 }
 
 .weekly-defense-card__title {
-  margin: 0 0 14px;
+  margin: 0 0 10px;
+  width: 100%;
   font-family: var(--doom-font);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  color: #b8b8c0;
+  font-size: 8px;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  color: #9a9aa6;
   text-align: center;
+  word-break: keep-all;
+}
+
+.weekly-defense-card__body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  padding: 0 4px;
 }
 
 .weekly-defense-card__vtrack {
-  flex: 1;
-  min-height: 0;
+  position: relative;
+  width: 44px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  margin-bottom: 12px;
-  border: 2px solid rgba(58, 58, 66, 0.9);
+  border: 2px solid rgba(58, 58, 66, 0.95);
   background: rgba(4, 4, 6, 0.96);
-  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.92);
+  box-shadow:
+    inset 0 0 14px rgba(0, 0, 0, 0.92),
+    0 0 8px rgba(80, 0, 0, 0.12);
   overflow: hidden;
 }
 
 .weekly-defense-card__vfill {
   width: 100%;
   height: 0;
-  background: linear-gradient(0deg, #8a0000 0%, var(--doom-red-bright) 72%, #ff8866 100%);
+  background: linear-gradient(
+    0deg,
+    #6a0000 0%,
+    var(--doom-red-bright) 55%,
+    #ff8866 100%
+  );
   box-shadow:
-    0 0 14px rgba(255, 34, 0, 0.45),
-    inset 0 2px 0 rgba(255, 180, 140, 0.25);
+    0 0 10px rgba(255, 34, 0, 0.4),
+    inset 0 1px 0 rgba(255, 180, 140, 0.22);
   transition: none;
 }
 
 .weekly-defense-card__percent {
-  margin: 0 0 10px;
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
   font-family: var(--doom-font);
-  font-size: 22px;
+  font-size: 11px;
   line-height: 1;
   text-align: center;
-  color: var(--doom-red-bright);
-  text-shadow: var(--doom-glow-red);
+  color: #fff;
+  text-shadow:
+    0 0 6px rgba(0, 0, 0, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.9);
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .weekly-defense-card__hint {
-  margin: 0;
-  padding-top: 10px;
+  margin: 10px 0 0;
+  padding-top: 8px;
+  width: 100%;
   border-top: 1px solid rgba(58, 58, 66, 0.55);
   font-family: var(--doom-font);
-  font-size: 9px;
-  letter-spacing: 0.14em;
+  font-size: 7px;
+  line-height: 1.35;
+  letter-spacing: 0.06em;
   text-align: center;
   color: #6a6a72;
 }
@@ -347,8 +380,4 @@
   letter-spacing: 0.08em;
   color: #6a6a72;
   text-align: center;
-}
-
-#gameover-modal:not(.hidden) {
-  gap: 16px;
 }

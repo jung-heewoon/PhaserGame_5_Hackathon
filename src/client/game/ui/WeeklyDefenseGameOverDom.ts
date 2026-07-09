@@ -78,7 +78,7 @@ function bindReward(status: WeeklyDefenseStatus): void {
       ? localeManager.t('weeklyDefense.rewardActiveBadge')
       : localeManager.t('weeklyDefense.rewardPendingBadge');
   }
-  if (amountEl) amountEl.textContent = `+${amount}`;
+  if (amountEl) amountEl.textContent = String(amount);
   if (labelEl) {
     labelEl.textContent = status.buffActive
       ? localeManager.t('weeklyDefense.rewardActive', { amount: String(amount) })
@@ -87,9 +87,10 @@ function bindReward(status: WeeklyDefenseStatus): void {
   if (descEl) {
     const remaining = Math.max(0, status.target - status.kills);
     descEl.textContent = status.buffActive
-      ? localeManager.t('weeklyDefense.rewardActiveDesc')
+      ? localeManager.t('weeklyDefense.rewardActiveDesc', { amount: String(amount) })
       : localeManager.t('weeklyDefense.rewardPendingDesc', {
           remaining: remaining.toLocaleString(),
+          amount: String(amount),
         });
   }
 }

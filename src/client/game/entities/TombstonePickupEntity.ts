@@ -1,11 +1,11 @@
 import TPFEntity from 'twopointfive-phaser-3/src/twopointfive/entity.ts';
-import TPFTimer from 'twopointfive-phaser-3/src/twopointfive/timer.ts';
 import type { EntityContext, ImageInfo } from 'twopointfive-phaser-3/src/twopointfive/types.ts';
 import type { TombstoneRecord } from '../../../../shared/tombstone.ts';
 import {
   TOMBSTONE_CONFIG,
   tombstonePickupOverlapsPlayer,
 } from '../config/TombstoneConfig.ts';
+import { RUN_GAME_CONFIG } from '../config/RunGameConfig.ts';
 import type RunnerPlayerEntity from './RunnerPlayerEntity.ts';
 import type { EntityPool } from '../systems/EntityPool.ts';
 import type { RunSession } from '../systems/RunSession.ts';
@@ -14,7 +14,6 @@ export default class TombstonePickupEntity extends TPFEntity {
   private readonly pickupImage: ImageInfo | null;
   private readonly session: RunSession | null;
   private readonly entityPool: EntityPool | null;
-  private bounceTimer: TPFTimer | null = null;
   record: TombstoneRecord | null = null;
   isOwn = false;
   collecting = false;
@@ -49,21 +48,19 @@ export default class TombstonePickupEntity extends TPFEntity {
       };
       this.addAnim('idle', 10, [0]);
     }
-    this.bounceTimer = new TPFTimer();
     if (settings) {
       this.record = (settings.record as TombstoneRecord) ?? null;
       this.isOwn = Boolean(settings.isOwn);
     }
     this.collecting = false;
+    this.pos.z = 0;
     super.init(x, y, settings);
   }
 
   update(): void {
     if (this._killed) return;
     if (this.session?.isGameplayFrozen && this.session.freezeReason !== 'tombstone') return;
-    if (this.bounceTimer) {
-      this.pos.z = (Math.cos(this.bounceTimer.delta() * 2.5) + 1) * 4;
-    }
+    this.pos.z = 0;
     super.update();
     this.tryLanePickup();
   }
@@ -114,14 +111,49 @@ export default class TombstonePickupEntity extends TPFEntity {
     return TOMBSTONE_CONFIG.frameHeightPx * this.scale;
   }
 
-  /** 데미지 숫자·BossDamageHudToast와 동일한 월드 앵커 (라벨 중심) */
-  getLabelAnchor(): { x: number; y: number; z: number } {
-    const spriteH = this.getSpriteDisplayHeight();
-    const centerY = this.pos.y + this.size.y / 2;
-    return {
-      x: this.pos.x + this.size.x / 2,
-      y: centerY - spriteH * 0.5 - TOMBSTONE_CONFIG.labelHeadMarginPx,
-      z: this.pos.z + TOMBSTONE_CONFIG.labelOffsetZ,
-    };
+  getWorldCenterX(): number {
+    return this.pos.x + this.size.x / 2;
+  }
+
+  getWorldCenterY(): number {
+    return this.pos.y + this.size.y / 2;
+  }
+
+  /** TPF updateQuad와 동일한 렌더 Z (visualSinkZ 반영) */
+  getRenderPosZ(): number {
+    return this.pos.z - TOMBSTONE_CONFIG.visualSinkZ;
+  }
+
+  getTileSize(): number {
+    const map = this.context.collisionMap;
+    if (map && 'tilesize' in map) return map.tilesize as number;
+    return RUN_GAME_CONFIG.tileSize;
+  }
+
+  override updateQuad(): void {
+    if (!this.tile || !this.animSheet) {
+      super.updateQuad();
+      return;
+    }
+
+    const ctx = this.context;
+    const camera = ctx.camera;
+    const culledSectors = ctx.culledSectors;
+    const ts = this.getTileSize();
+    const halfH = this.getSpriteDisplayHeight() / 2;
+
+    const tpos = this.tile.quad.position;
+    tpos[0] = this.getWorldCenterX();
+    tpos[2] = this.getWorldCenterY();
+    tpos[1] = this.getRenderPosZ() - ts / 2 + halfH;
+
+    if (this.rotateToView && camera) {
+      this.tile.quad.rotation[1] = camera.rotation[1];
+    }
+    this.tile.quad._dirty = true;
+
+    if (!this._killed && culledSectors) {
+      culledSectors.moveEntity(this);
+    }
   }
 }

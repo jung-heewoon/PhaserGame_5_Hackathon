@@ -10,8 +10,8 @@ export const TOMBSTONE_CONFIG = {
   poolSize: 12,
   frameWidthPx: 138,
   frameHeightPx: 110,
-  /** 화면 표시 목표 너비 ≈ 64px */
-  displayScale: 64 / 138,
+  /** 화면 표시 목표 너비 ≈ 48px */
+  displayScale: 48 / 138,
   /** Y축 근접 습득 반폭 — 통과 시 1개 트리거 */
   pickupBandHalfYPx: 64,
   /** 습득 순간 주변 비석 일괄 병합 반경 */
@@ -21,13 +21,15 @@ export const TOMBSTONE_CONFIG = {
   feverWarnBeforeMs: 2500,
   /** 피버타임 중 공격 속도 +30% → 쿨다운 ÷1.3 */
   feverAttackSpeedMul: 1.3,
-  /** 라벨 앵커 — 스프라이트 상단 위 (월드 Y, 북쪽) */
-  labelHeadMarginPx: 6,
-  /** projectQuadCenterToHud verticalHalfExtent */
-  labelHalfExtentPx: 7,
-  labelOffsetZ: 28,
   /** 통로 중앙 기준 좌우 랜덤 오프셋 반폭 (px) */
   spawnOffsetHalfXPx: 100,
+  /**
+   * 렌더 quad만 화면 아래로 (픽업·충돌 Y는 그대로).
+   * Tombstone.png 하단 투명 여백 보정.
+   */
+  visualSinkZ: 10,
+  /** 라벨 — 스프라이트 상단에서 위로 (HUD px) */
+  labelGapPx: 3,
 } as const;
 
 export function tombstoneVisualWidthPx(): number {

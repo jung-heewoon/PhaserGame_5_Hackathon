@@ -2,8 +2,7 @@ import type TPFEntity from 'twopointfive-phaser-3/src/twopointfive/entity.ts';
 import type { Camera } from 'twopointfive-phaser-3/src/twopointfive/types.ts';
 import TombstonePickupEntity from '../entities/TombstonePickupEntity.ts';
 import { TOMBSTONE_CONFIG } from '../config/TombstoneConfig.ts';
-import { projectQuadCenterToHud } from './WorldUiProjection.ts';
-import { RUN_GAME_CONFIG } from '../config/RunGameConfig.ts';
+import { projectSpriteTopToHud } from './WorldUiProjection.ts';
 
 type LabelEntry = {
   ent: TombstonePickupEntity;
@@ -19,44 +18,41 @@ function ensureLayer(): HTMLElement | null {
   return layerEl;
 }
 
-function tileSizeFromEntity(ent: TombstonePickupEntity): number {
-  const map = ent.context.collisionMap;
-  if (map && 'tilesize' in map) return map.tilesize as number;
-  return RUN_GAME_CONFIG.tileSize;
-}
-
-/** BossDamageHudToast·DamageNumberEntity와 동일 투영 + 스프라이트 화면 높이에 비례 폰트 */
+/** 스프라이트 상단(TPF quad와 동일)에 라벨 붙임 */
 function projectTombstoneLabelHud(
   ent: TombstonePickupEntity,
   camera: Camera,
 ): { x: number; y: number; fontSize: number } {
-  const tileSize = tileSizeFromEntity(ent);
-  const anchor = ent.getLabelAnchor();
   const spriteH = ent.getSpriteDisplayHeight();
-  const centerY = ent.pos.y + ent.size.y / 2;
+  const tileSize = ent.getTileSize();
+  const renderZ = ent.getRenderPosZ();
 
-  const labelHud = projectQuadCenterToHud(
-    anchor.x,
-    anchor.y,
-    anchor.z,
+  const topHud = projectSpriteTopToHud({
+    worldCenterX: ent.getWorldCenterX(),
+    worldCenterY: ent.getWorldCenterY(),
+    posZ: renderZ,
+    spriteDisplayHeight: spriteH,
     tileSize,
-    TOMBSTONE_CONFIG.labelHalfExtentPx,
     camera,
-  );
+  });
 
-  const baseHud = projectQuadCenterToHud(
-    anchor.x,
-    centerY + spriteH * 0.5,
-    ent.pos.z,
+  const baseHud = projectSpriteTopToHud({
+    worldCenterX: ent.getWorldCenterX(),
+    worldCenterY: ent.getWorldCenterY(),
+    posZ: renderZ,
+    spriteDisplayHeight: spriteH * 0.35,
     tileSize,
-    spriteH * 0.5,
     camera,
-  );
+  });
 
-  const projectedSpriteH = Math.abs(baseHud.y - labelHud.y);
-  const fontSize = Math.round(Math.max(12, Math.min(17, projectedSpriteH * 0.3)));
+  const projectedSpriteH = Math.abs(baseHud.y - topHud.y);
+  const fontSize = Math.round(Math.max(11, Math.min(15, projectedSpriteH * 0.34)));
 
-  return { x: labelHud.x, y: labelHud.y, fontSize };
+  return {
+    x: topHud.x,
+    y: topHud.y - TOMBSTONE_CONFIG.labelGapPx,
+    fontSize,
+  };
 }
 
 export function registerTombstoneLabel(ent: TombstonePickupEntity, username: string): void {
