@@ -2,7 +2,6 @@ import { DICE_ASSETS } from '../assets/DiceAssets.ts';
 import { localeManager } from '../locale/LocaleManager.ts';
 import {
   WEEKLY_DEFENSE_CONFIG,
-  applyWeeklyDefenseDebugOverrides,
   type WeeklyDefenseStatus,
 } from '../../../shared/weeklyDefense.ts';
 
@@ -59,10 +58,6 @@ function formatCompactCount(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 10_000) return `${(value / 1_000).toFixed(1)}K`;
   return value.toLocaleString();
-}
-
-function applyDebugWeeklyStatus(status: WeeklyDefenseStatus): WeeklyDefenseStatus {
-  return applyWeeklyDefenseDebugOverrides(status);
 }
 
 function ensureDiceIcon(): void {
@@ -196,7 +191,7 @@ export function showWeeklyDefenseOnGameOver(status: WeeklyDefenseStatus | null |
     return;
   }
 
-  cachedStatus = applyDebugWeeklyStatus(status);
+  cachedStatus = status;
   card.classList.remove('weekly-defense-card--loading', 'hidden');
   card.classList.toggle('weekly-defense-card--buff', cachedStatus.buffActive);
 

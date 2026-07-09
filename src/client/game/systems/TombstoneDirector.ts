@@ -8,10 +8,6 @@ import {
 import TombstonePickupEntity from '../entities/TombstonePickupEntity.ts';
 import type RunnerPlayerEntity from '../entities/RunnerPlayerEntity.ts';
 import type { TombstoneRecord } from '../../../shared/tombstone.ts';
-import {
-  isDummyTombstoneUsername,
-  tombstoneDummiesForPlaytest,
-} from '../../../shared/tombstoneDummies.ts';
 import type { EntityPool } from './EntityPool.ts';
 import type { RunSession } from './RunSession.ts';
 import { tombstoneClient } from '../platform/reddit/TombstoneClient.ts';
@@ -49,18 +45,12 @@ export class TombstoneDirector {
     try {
       const data = await tombstoneClient.fetchTombstones();
       this.me = data.me;
-      const tombstones =
-        data.tombstones.length > 0
-          ? data.tombstones
-          : tombstoneDummiesForPlaytest(data.me);
-      this.queue = [...tombstones].sort((a, b) => a.triggerMs - b.triggerMs);
+      this.queue = [...data.tombstones].sort((a, b) => a.triggerMs - b.triggerMs);
       this.loaded = true;
     } catch (err) {
-      console.warn('tombstone hydrate failed — using local dummies', err);
+      console.warn('tombstone hydrate failed', err);
       this.me = '';
-      this.queue = [...tombstoneDummiesForPlaytest('')].sort(
-        (a, b) => a.triggerMs - b.triggerMs,
-      );
+      this.queue = [];
       this.loaded = true;
     }
   }
@@ -126,8 +116,7 @@ export class TombstoneDirector {
     const spawnY = spawnAheadY(player.pos.y);
     if (spawnY >= player.pos.y - 32) return;
 
-    const isOwn =
-      record.username === this.me && !isDummyTombstoneUsername(record.username);
+    const isOwn = record.username === this.me;
     const ent = this.entityPool.acquireTombstone(spawnY, record, isOwn);
     if (!ent) return;
     this.spawnedUsernames.add(record.username);

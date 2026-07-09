@@ -8,47 +8,8 @@ const GLOBAL_TRIM_SIZE = 500
 
 const GLOBAL_KEY = 'leaderboard:global'
 
-/** 테스트용 더미 유저 — 랭킹이 비어 있을 때만 1회 시드 */
-const DUMMY_POST_SCORES: ReadonlyArray<{member: string; score: number}> = [
-  {member: 'dice_demon', score: 980},
-  {member: 'yatzy_knight', score: 845},
-  {member: 'hell_runner', score: 720},
-  {member: 'combo_cat', score: 615},
-  {member: 'railgun_rex', score: 540},
-  {member: 'nuke_nova', score: 480},
-  {member: 'shotty_sam', score: 390},
-  {member: 'minigun_mia', score: 310},
-  {member: 'pistol_pete', score: 240},
-  {member: 'rookie_roll', score: 120},
-]
-
-const DUMMY_GLOBAL_SCORES: ReadonlyArray<{member: string; score: number}> = [
-  {member: 'global_champ', score: 2500},
-  {member: 'dice_demon', score: 2100},
-  {member: 'subreddit_slugger', score: 1880},
-  {member: 'yatzy_knight', score: 1650},
-  {member: 'hell_runner', score: 1420},
-  {member: 'crown_chaser', score: 1190},
-  {member: 'combo_cat', score: 980},
-  {member: 'railgun_rex', score: 760},
-  {member: 'nuke_nova', score: 520},
-  {member: 'pistol_pete', score: 280},
-]
-
 function postKey(postId: string): string {
   return `leaderboard:post:${postId}`
-}
-
-async function seedIfEmpty(
-  key: string,
-  dummies: ReadonlyArray<{member: string; score: number}>,
-): Promise<void> {
-  // card>0 이어도 더미가 없으면 합친다 (이전에 실유저만 먼저 저장된 경우)
-  const existing = await getTopEntries(key, Math.max(dummies.length, 20))
-  const names = new Set(existing.map(entry => entry.username))
-  const missing = dummies.filter(dummy => !names.has(dummy.member))
-  if (missing.length === 0) return
-  await redis.zAdd(key, ...missing)
 }
 
 function normalizeScore(score: number): number {
@@ -157,7 +118,6 @@ export async function getLeaderboardScope(
 }
 
 function resolvePostKey(postId: string | undefined): string {
-  // postId 없으면도 스레드 탭이 비지 않도록 공유 키 사용
   return postKey(postId && postId.length > 0 ? postId : 'default')
 }
 
@@ -166,10 +126,6 @@ export async function getLeaderboards(
   postId: string | undefined,
 ): Promise<{post: LeaderboardScopeData; global: LeaderboardScopeData}> {
   const key = resolvePostKey(postId)
-
-  // 실제 점수 제출 전에 항상 시드 가능하도록 조회 시에도 먼저 채움
-  await seedIfEmpty(GLOBAL_KEY, DUMMY_GLOBAL_SCORES)
-  await seedIfEmpty(key, DUMMY_POST_SCORES)
 
   const [global, post] = await Promise.all([
     getLeaderboardScope(GLOBAL_KEY, username, GLOBAL_LEADERBOARD_LIMIT),
@@ -185,10 +141,6 @@ export async function submitLeaderboardScore(
 ): Promise<{post: LeaderboardScopeData; global: LeaderboardScopeData}> {
   const normalized = normalizeScore(score)
   const key = resolvePostKey(postId)
-
-  // upsert 전에 시드 — 유저 1명만 먼저 들어가면 더미가 영원히 안 들어감
-  await seedIfEmpty(GLOBAL_KEY, DUMMY_GLOBAL_SCORES)
-  await seedIfEmpty(key, DUMMY_POST_SCORES)
 
   if (normalized > 0 && username !== 'anonymous') {
     await upsertScore(key, username, normalized)

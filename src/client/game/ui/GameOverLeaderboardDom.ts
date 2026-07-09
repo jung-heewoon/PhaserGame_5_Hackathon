@@ -8,7 +8,6 @@ import {
   leaderboardClient,
   type LeaderboardScope,
 } from '../platform/reddit/LeaderboardClient.ts';
-import { createDummyLeaderboard } from '../platform/reddit/LeaderboardDummy.ts';
 
 const CROWN_SVG = `<svg class="gameover-leaderboard__podium-crown" viewBox="0 0 32 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M4 22h24v3H4v-3zm2.2-14 3.4 6.2 5.6-9.4 5.6 9.4 3.4-6.2L28 22H4L6.2 8z"/></svg>`;
 
@@ -247,33 +246,6 @@ function bindLeaderboardBodyScroll(): void {
   body.addEventListener('pointercancel', endDrag);
 }
 
-function withDummyFallback(data: GetLeaderboardRsp | null): GetLeaderboardRsp {
-  const dummy = createDummyLeaderboard(pendingHighScore);
-  if (!data) return dummy;
-
-  // THREAD만 비어 있고 GLOBAL만 채워진 경우에도 더미로 보완
-  // (postId 누락 / 시드 스킵 / 구버전 서버 응답 대응)
-  return {
-    post:
-      data.post.entries.length > 0
-        ? data.post
-        : {
-            ...dummy.post,
-            me: data.post.me ?? dummy.post.me,
-            meOutOfRange: data.post.meOutOfRange ?? dummy.post.meOutOfRange,
-          },
-    global:
-      data.global.entries.length > 0
-        ? data.global
-        : {
-            ...dummy.global,
-            me: data.global.me ?? dummy.global.me,
-            meOutOfRange:
-              data.global.meOutOfRange ?? dummy.global.meOutOfRange,
-          },
-  };
-}
-
 async function loadLeaderboard(submitScore: number | null): Promise<void> {
   const token = ++loadToken;
   setStatus(localeManager.t('leaderboard.loading'));
@@ -286,12 +258,12 @@ async function loadLeaderboard(submitScore: number | null): Promise<void> {
 
     if (token !== loadToken) return;
 
-    cachedData = withDummyFallback(data);
+    cachedData = data;
     setStatus('');
     renderScope(activeScope);
   } catch {
     if (token !== loadToken) return;
-    cachedData = withDummyFallback(leaderboardClient.getCached());
+    cachedData = leaderboardClient.getCached();
     setStatus('');
     renderScope(activeScope);
   }

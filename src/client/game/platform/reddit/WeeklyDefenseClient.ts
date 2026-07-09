@@ -4,7 +4,6 @@ import {
   type ContributeWeeklyDefenseRsp,
   type GetWeeklyDefenseRsp,
 } from '../../../../shared/api.ts';
-import { applyWeeklyDefenseDebugOverrides } from '../../../../shared/weeklyDefense.ts';
 
 class WeeklyDefenseClientImpl {
   private cached: GetWeeklyDefenseRsp | null = null;
@@ -20,9 +19,7 @@ class WeeklyDefenseClientImpl {
     if (!rsp.ok) {
       throw new Error(`weekly-defense status failed: ${rsp.status}`);
     }
-    const data = applyWeeklyDefenseDebugOverrides(
-      (await rsp.json()) as GetWeeklyDefenseRsp,
-    );
+    const data = (await rsp.json()) as GetWeeklyDefenseRsp;
     this.cached = data;
     return data;
   }
@@ -41,9 +38,7 @@ class WeeklyDefenseClientImpl {
     if (!rsp.ok) {
       throw new Error(`weekly-defense contribute failed: ${rsp.status}`);
     }
-    const data = applyWeeklyDefenseDebugOverrides(
-      (await rsp.json()) as ContributeWeeklyDefenseRsp,
-    );
+    const data = (await rsp.json()) as ContributeWeeklyDefenseRsp;
     this.cached = data;
     return data;
   }

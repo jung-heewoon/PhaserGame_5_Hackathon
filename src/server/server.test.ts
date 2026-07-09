@@ -234,7 +234,6 @@ test('submit leaderboard score', async () => {
   assert.ok(me)
   assert.equal(me.score, 120)
   assert.deepEqual(body.post.me, me)
-  assert.ok(body.post.entries.some(entry => entry.username === 'dice_demon'))
 })
 
 test('submit leaderboard keeps higher score only', async () => {
@@ -265,22 +264,21 @@ test('get leaderboard ranks multiple users', async () => {
   assert.equal(body.global.entries[0]?.username, 'test-user')
   assert.equal(body.global.me?.rank, 1)
   assert.equal(body.global.me?.score, 3000)
-  assert.ok(
-    body.global.entries.some(entry => entry.username === 'global_champ'),
-  )
+  assert.ok(body.global.entries.some(entry => entry.username === 'alpha'))
 })
 
-test('get leaderboard seeds dummy users when empty', async () => {
+test('get leaderboard returns empty when no scores', async () => {
+  redisSortedSets.delete('leaderboard:global')
+  redisSortedSets.delete('leaderboard:post:default')
+
   const rsp = await fetch(`${serverURL}/${Endpoint.GetLeaderboard}`)
   assert.equal(rsp.status, 200)
   const body = (await rsp.json()) as GetLeaderboardRsp
-  assert.equal(body.post.entries.length, 10)
-  assert.equal(body.post.entries[0]?.username, 'dice_demon')
-  assert.equal(body.global.entries.length, 10)
-  assert.equal(body.global.entries[0]?.username, 'global_champ')
+  assert.equal(body.post.entries.length, 0)
+  assert.equal(body.global.entries.length, 0)
 })
 
-test('submit after empty still keeps dummy users', async () => {
+test('submit leaderboard stores user score', async () => {
   const rsp = await fetch(`${serverURL}/${Endpoint.SubmitLeaderboard}`, {
     body: JSON.stringify({score: 50}),
     headers: {'Content-Type': 'application/json'},
@@ -288,20 +286,20 @@ test('submit after empty still keeps dummy users', async () => {
   })
   assert.equal(rsp.status, 200)
   const body = (await rsp.json()) as SubmitLeaderboardRsp
-  assert.ok(body.post.entries.length >= 10)
-  assert.ok(body.global.entries.length >= 10)
-  assert.ok(body.post.entries.some(entry => entry.username === 'dice_demon'))
-  assert.ok(body.post.entries.some(entry => entry.username === 'test-user'))
+  assert.equal(body.post.entries.length, 1)
+  assert.equal(body.post.entries[0]?.username, 'test-user')
+  assert.equal(body.global.entries.length, 1)
+  assert.equal(body.global.entries[0]?.username, 'test-user')
 })
 
-test('get tombstones seeds dummy users', async () => {
+test('get tombstones returns empty when none stored', async () => {
+  redisHashes.delete('tombstone:post:t3_123')
+
   const rsp = await fetch(`${serverURL}/${Endpoint.GetTombstones}`)
   assert.equal(rsp.status, 200)
   const body = (await rsp.json()) as GetTombstonesRsp
   assert.equal(body.me, 'test-user')
-  assert.ok(body.tombstones.length >= 8)
-  assert.ok(body.tombstones.some(t => t.username === 'dice_demon'))
-  assert.ok(body.tombstones.every(t => t.username !== 'test-user'))
+  assert.equal(body.tombstones.length, 0)
 })
 
 test('upsert tombstone and list', async () => {

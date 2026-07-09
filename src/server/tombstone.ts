@@ -11,7 +11,6 @@ import {
   type TombstoneRecord,
   tombstoneCoinBonus,
 } from '../shared/tombstone.ts'
-import {DUMMY_TOMBSTONE_SEEDS} from '../shared/tombstoneDummies.ts'
 import {
   formatDefenseGaugeBar,
   validateRunKills,
@@ -76,29 +75,6 @@ async function readHash(key: string): Promise<TombstoneRecord[]> {
   }
   records.sort((a, b) => a.triggerMs - b.triggerMs)
   return records
-}
-
-/** 실유저만 있어도 더미가 없으면 합친다 (리더보드 seedIfEmpty 패턴) */
-async function seedMissingDummies(key: string): Promise<void> {
-  const all = await redis.hGetAll(key)
-  const existing = new Set(Object.keys(all))
-  const toAdd: Record<string, string> = {}
-  const updatedAt = Date.now()
-
-  for (const seed of DUMMY_TOMBSTONE_SEEDS) {
-    if (existing.has(seed.username)) continue
-    toAdd[seed.username] = serializeRecord({
-      score: seed.score,
-      triggerMs: seed.triggerMs,
-      coinsAtDeath: seed.coinsAtDeath,
-      deathReasonId: seed.deathReasonId,
-      updatedAt,
-    })
-  }
-
-  if (Object.keys(toAdd).length > 0) {
-    await redis.hSet(key, toAdd)
-  }
 }
 
 type RedditCommentApi = {
@@ -166,7 +142,6 @@ export async function listTombstones(
   postId: string | undefined,
 ): Promise<GetTombstonesRsp> {
   const key = tombstoneKey(resolveTombstonePostKey(postId))
-  await seedMissingDummies(key)
   const tombstones = await readHash(key)
   const filtered =
     me === 'anonymous'
