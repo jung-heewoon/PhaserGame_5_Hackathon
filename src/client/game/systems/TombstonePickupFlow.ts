@@ -1,5 +1,5 @@
 import type { TombstoneRecord } from '../../../shared/tombstone.ts';
-import { pickRandomDeathReasonId } from '../../../shared/tombstone.ts';
+import { pickRandomDeathReasonId, tombstoneCoinBonus } from '../../../shared/tombstone.ts';
 import { tombstoneClient } from '../platform/reddit/TombstoneClient.ts';
 import type TombstonePickupEntity from '../entities/TombstonePickupEntity.ts';
 import type { CoinSystem } from './CoinSystem.ts';
@@ -10,6 +10,7 @@ import type { TombstoneDirector } from './TombstoneDirector.ts';
 import { showTombstoneRewardModal } from '../ui/TombstoneRewardModalDom.ts';
 import { spawnCoinBurst } from '../ui/CoinHudDom.ts';
 import { GAME_DESIGN_WIDTH, GAME_DESIGN_HEIGHT } from '../config/GameDisplayConfig.ts';
+import type RunnerPlayerEntity from '../entities/RunnerPlayerEntity.ts';
 
 export class TombstonePickupFlow {
   private busy = false;
@@ -30,29 +31,53 @@ export class TombstonePickupFlow {
     this.gameRunState = gameRunState;
   }
 
-  tryPending(playerY: number): void {
-    if (!this.session.pendingTombstonePickup || this.busy) return;
-    if (this.session.isGameplayFrozen) return;
-    this.session.pendingTombstonePickup = false;
-    const band = 48;
-    const nearby = this.director.getActiveTombstones().find(
-      (ent) => !ent.isOwn && ent.record && Math.abs(ent.pos.y - playerY) <= band,
-    );
-    if (nearby) {
-      void this.onPickup(nearby);
-    }
-  }
-
-  async onPickup(source: TombstonePickupEntity): Promise<void> {
-    if (this.busy || !source.record) return;
+  pollPlayerPickup(player: RunnerPlayerEntity | null): void {
+    if (!player || player.isDead || this.busy) return;
     if (this.session.isGameplayFrozen && this.session.freezeReason !== 'tombstone') return;
 
-    const playerY = source.pos.y;
-    const merged = this.director.collectMergeBand(playerY, source);
+    if (this.session.pendingTombstonePickup) {
+      this.session.pendingTombstonePickup = false;
+    }
+
+    const triggers = this.director.findPickupTrigger(player.pos.y, player.size.y);
+    if (triggers.length === 0) return;
+
+    const source = triggers[0]!;
+    source.collecting = true;
+    void this.onPickup(source, player);
+  }
+
+  tryPending(player: RunnerPlayerEntity | null): void {
+    if (!this.session.pendingTombstonePickup || this.busy) return;
+    this.pollPlayerPickup(player);
+  }
+
+  async onPickup(source: TombstonePickupEntity, player?: RunnerPlayerEntity): Promise<void> {
+    if (this.busy || !source.record) {
+      source.collecting = false;
+      return;
+    }
+    if (this.session.isGameplayFrozen && this.session.freezeReason !== 'tombstone') {
+      source.collecting = false;
+      return;
+    }
+
+    const playerEntity = player ?? this.director.getPlayerEntity();
+    const playerY = playerEntity?.pos.y ?? source.pos.y;
+    const playerSizeY = playerEntity?.size.y ?? 28;
+    const merged = this.director.collectNearbyAtPickup(playerY, playerSizeY);
+    for (const ent of merged) {
+      ent.collecting = true;
+    }
     const records = merged
       .map((ent) => ent.record)
       .filter((r): r is TombstoneRecord => r !== null);
-    if (records.length === 0) return;
+    if (records.length === 0) {
+      for (const ent of merged) {
+        ent.collecting = false;
+      }
+      return;
+    }
 
     this.busy = true;
     this.session.freeze('tombstone');
@@ -60,30 +85,48 @@ export class TombstonePickupFlow {
 
     try {
       const result = await showTombstoneRewardModal(records);
-      const usernames = records.map((r) => r.username);
-      const claim = await tombstoneClient.claim(usernames);
-      const bonus = claim.totalCoinBonus;
-      if (bonus > 0) {
-        this.coinSystem.addAmount(bonus);
-        spawnCoinBurst(GAME_DESIGN_WIDTH / 2, GAME_DESIGN_HEIGHT * 0.35, bonus);
-      }
 
       for (const ent of merged) {
         this.director.releaseTombstone(ent);
+      }
+
+      if (this.session.freezeReason === 'tombstone') {
+        this.session.unfreeze();
       }
 
       feverTimeSystem.start(result.totalPips);
       this.gameRunState.setFeverInfiniteAmmo(true);
+
+      void this.applyClaimBonus(records);
     } catch (err) {
       console.warn('tombstone pickup flow failed', err);
       for (const ent of merged) {
+        ent.collecting = false;
         this.director.releaseTombstone(ent);
       }
-    } finally {
-      this.busy = false;
       if (this.session.freezeReason === 'tombstone') {
         this.session.unfreeze();
       }
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private async applyClaimBonus(records: TombstoneRecord[]): Promise<void> {
+    const usernames = records.map((r) => r.username);
+    let bonus = records.reduce(
+      (sum, record) => sum + tombstoneCoinBonus(record.coinsAtDeath),
+      0,
+    );
+    try {
+      const claim = await tombstoneClient.claim(usernames);
+      bonus = claim.totalCoinBonus;
+    } catch (claimErr) {
+      console.warn('tombstone claim failed — local bonus fallback', claimErr);
+    }
+    if (bonus > 0) {
+      this.coinSystem.addAmount(bonus);
+      spawnCoinBurst(GAME_DESIGN_WIDTH / 2, GAME_DESIGN_HEIGHT * 0.35, bonus);
     }
   }
 }

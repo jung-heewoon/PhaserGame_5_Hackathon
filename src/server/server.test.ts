@@ -285,12 +285,14 @@ test('submit after empty still keeps dummy users', async () => {
   assert.ok(body.post.entries.some(entry => entry.username === 'test-user'))
 })
 
-test('get tombstones empty', async () => {
+test('get tombstones seeds dummy users', async () => {
   const rsp = await fetch(`${serverURL}/${Endpoint.GetTombstones}`)
   assert.equal(rsp.status, 200)
   const body = (await rsp.json()) as GetTombstonesRsp
   assert.equal(body.me, 'test-user')
-  assert.deepEqual(body.tombstones, [])
+  assert.ok(body.tombstones.length >= 8)
+  assert.ok(body.tombstones.some(t => t.username === 'dice_demon'))
+  assert.ok(body.tombstones.every(t => t.username !== 'test-user'))
 })
 
 test('upsert tombstone and list', async () => {
@@ -312,8 +314,10 @@ test('upsert tombstone and list', async () => {
 
   const listRsp = await fetch(`${serverURL}/${Endpoint.GetTombstones}`)
   const listBody = (await listRsp.json()) as GetTombstonesRsp
-  assert.equal(listBody.tombstones.length, 1)
-  assert.equal(listBody.tombstones[0]?.username, 'test-user')
+  const mine = listBody.tombstones.find(t => t.username === 'test-user')
+  assert.ok(mine)
+  assert.equal(mine.score, 15400)
+  assert.equal(mine.triggerMs, 120000)
 })
 
 test('upsert tombstone keeps higher trigger only', async () => {

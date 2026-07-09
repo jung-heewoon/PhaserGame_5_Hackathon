@@ -122,8 +122,12 @@ class SfxManagerImpl {
       const delayMs = Math.max(0, baseDelay + jitter);
 
       scene.time.delayedCall(delayMs, () => {
-        if (!this.scene) return;
-        this.scene.sound.play(SOUND_KEYS.diceRoll, { volume: vol });
+        if (!this.scene || !this.hasSound(SOUND_KEYS.diceRoll)) return;
+        try {
+          this.scene.sound.play(SOUND_KEYS.diceRoll, { volume: vol });
+        } catch {
+          // ignore
+        }
       });
     }
   }
@@ -145,7 +149,7 @@ class SfxManagerImpl {
   startMinigunLoop(): void {
     if (this.minigunLoopPlaying) return;
     const scene = this.scene;
-    if (!scene) return;
+    if (!scene || !this.hasSound(SOUND_KEYS.minigun)) return;
 
     this.stopMinigunTail();
 
@@ -205,7 +209,7 @@ class SfxManagerImpl {
 
   playBossSuccess(): void {
     const scene = this.scene;
-    if (!scene) return;
+    if (!scene || !this.hasSound(SOUND_KEYS.bossSuccess)) return;
 
     this.stopBossSuccess();
     const sound = scene.sound.add(SOUND_KEYS.bossSuccess, {
@@ -234,8 +238,12 @@ class SfxManagerImpl {
     const vol = this.volumeScalar() * AUDIO_CONFIG.bossWarningVolumeMult;
     for (const delayMs of AUDIO_CONFIG.bossWarningBurstDelaysMs) {
       scene.time.delayedCall(delayMs, () => {
-        if (!this.scene) return;
-        this.scene.sound.play(SOUND_KEYS.bossWarning, { volume: vol });
+        if (!this.scene || !this.hasSound(SOUND_KEYS.bossWarning)) return;
+        try {
+          this.scene.sound.play(SOUND_KEYS.bossWarning, { volume: vol });
+        } catch {
+          // ignore
+        }
       });
     }
   }
@@ -263,7 +271,7 @@ class SfxManagerImpl {
 
   playGameOver(onComplete?: () => void): void {
     const scene = this.scene;
-    if (!scene) {
+    if (!scene || !this.hasSound(SOUND_KEYS.gameOver)) {
       onComplete?.();
       return;
     }
@@ -404,8 +412,16 @@ class SfxManagerImpl {
 
   private playOneShot(key: string, volumeMult = 1): void {
     const scene = this.scene;
-    if (!scene) return;
-    scene.sound.play(key, { volume: this.volumeScalar() * volumeMult });
+    if (!scene || !this.hasSound(key)) return;
+    try {
+      scene.sound.play(key, { volume: this.volumeScalar() * volumeMult });
+    } catch {
+      // devvit 504 등으로 SFX 로드 실패 시 게임플레이는 계속
+    }
+  }
+
+  private hasSound(key: string): boolean {
+    return Boolean(this.scene?.cache.audio.exists(key));
   }
 
   private volumeScalar(): number {
@@ -436,7 +452,7 @@ class SfxManagerImpl {
 
   private warmCoinGetPool(): void {
     const scene = this.scene;
-    if (!scene) return;
+    if (!scene || !this.hasSound(SOUND_KEYS.coinGet)) return;
 
     this.coinGetPool = [];
     for (let i = 0; i < AUDIO_CONFIG.coinGetSoundPoolSize; i++) {
@@ -456,7 +472,7 @@ class SfxManagerImpl {
 
   private warmMissilePools(): void {
     const scene = this.scene;
-    if (!scene) return;
+    if (!scene || !this.hasSound(SOUND_KEYS.missileLauncher)) return;
 
     this.missileFirePool = this.createMissilePool(scene);
     this.missileExplodePool = this.createMissilePool(scene);

@@ -138,6 +138,19 @@ tutorial.hand_desc.ONE_PAIR,같은 눈금 2개,One pair
 tutorial.hand_desc.NONE,특별한 조합 없음 (하이 카드),No special combo (high card)
 tombstone.title,비석 발견!,TOMBSTONE!
 tombstone.continue,피버타임!,FEVER TIME!
+tombstone.step.infoTitle,{user}의 비석,{user}'s Tombstone
+tombstone.message.atScore,{score}점에서,at {score} pts
+tombstone.message.fellSuffix,넘어졌습니다,fell here
+tombstone.step.infoSubtitle,도중에 쓰러진 러너의 흔적입니다.,A fallen runner left their mark on the road.
+tombstone.step.infoNext,보상 받기,CLAIM REWARDS
+tombstone.step.rewardTitle,보상 정산,REWARD SETTLEMENT
+tombstone.step.rewardSubtitle,쓰러진 러너에게서 회수한 코인입니다.,Coins salvaged from the fallen.
+tombstone.step.rewardNext,주사위 굴리기,ROLL DICE
+tombstone.step.diceTitle,피버 굴림,FEVER ROLL
+tombstone.step.diceSubtitle,비석마다 주사위 1개. 합계 눈금이 피버타임을 결정합니다.,Each tombstone grants one die. Total pips fuel Fever Time.
+tombstone.step.pips,합계 {total} 눈금 · 피버 {sec}초,TOTAL {total} PIPS · {sec}s FEVER
+tombstone.step.rewardCount,{count}개 비석 회수,{count} tombstones claimed
+tombstone.step.diceExtra,×{extra},×{extra}
 tombstone.message,{user}님이 {score}점에서 {reason} 넘어졌습니다!,{user} fell at {score} pts — {reason}!
 tombstone.coins,+{amount} Coins!,+{amount} Coins!
 tombstone.tab,{current}/{total},{current}/{total}

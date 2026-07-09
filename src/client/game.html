@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
@@ -257,10 +257,10 @@
                 id="settings-language"
                 class="doom-select doom-settings-select"
               >
-                <option value="ko" selected data-i18n="settings.lang.ko">
+                <option value="ko" data-i18n="settings.lang.ko">
                   한국어
                 </option>
-                <option value="en" data-i18n="settings.lang.en">English</option>
+                <option value="en" selected data-i18n="settings.lang.en">English</option>
               </select>
             </label>
             <div class="doom-settings-volume-block">
@@ -525,46 +525,105 @@
         </div>
         <div id="tombstone-reward-modal" class="doom-modal hidden">
           <div class="doom-modal__panel doom-modal__panel--tombstone">
-            <h2 class="tombstone-reward__title" data-i18n="tombstone.title">
-              TOMBSTONE!
-            </h2>
-            <p id="tombstone-reward-message" class="tombstone-reward__message"></p>
-            <p id="tombstone-reward-coins" class="tombstone-reward__coins"></p>
-            <div class="tombstone-reward__tabs">
-              <button
-                id="tombstone-reward-tab-prev"
-                type="button"
-                class="tombstone-reward__tab-btn"
-                aria-label="Previous"
-              >
-                ‹
-              </button>
-              <span
-                id="tombstone-reward-tab-counter"
-                class="tombstone-reward__tab-counter"
-              ></span>
-              <button
-                id="tombstone-reward-tab-next"
-                type="button"
-                class="tombstone-reward__tab-btn"
-                aria-label="Next"
-              >
-                ›
-              </button>
+            <div class="tombstone-reward__steps" aria-hidden="true">
+              <span class="tombstone-reward__step-dot is-active" data-step="info"></span>
+              <span class="tombstone-reward__step-line"></span>
+              <span class="tombstone-reward__step-dot" data-step="reward"></span>
+              <span class="tombstone-reward__step-line"></span>
+              <span class="tombstone-reward__step-dot" data-step="dice"></span>
             </div>
-            <div
-              id="tombstone-reward-dice-row"
-              class="tombstone-reward__dice-row"
-              aria-hidden="true"
-            ></div>
-            <button
-              id="tombstone-reward-continue-btn"
-              type="button"
-              class="doom-btn tombstone-reward__continue"
-              data-i18n="tombstone.continue"
-            >
-              CONTINUE
-            </button>
+
+            <section id="tombstone-step-info" class="tombstone-step">
+              <div class="tombstone-reward__hero">
+                <div id="tombstone-reward-icon" class="tombstone-reward__icon" aria-hidden="true"></div>
+              </div>
+              <h2 id="tombstone-reward-title" class="tombstone-reward__title">
+                TOMBSTONE
+              </h2>
+              <p class="tombstone-reward__subtitle" data-i18n="tombstone.step.infoSubtitle">
+                A fallen runner left their mark on the road.
+              </p>
+              <article class="tombstone-reward__card">
+                <div id="tombstone-reward-message" class="tombstone-reward__message"></div>
+                <div class="tombstone-reward__tabs">
+                  <button
+                    id="tombstone-reward-tab-prev"
+                    type="button"
+                    class="tombstone-reward__tab-btn"
+                    aria-label="Previous"
+                  >
+                    ‹
+                  </button>
+                  <span
+                    id="tombstone-reward-tab-counter"
+                    class="tombstone-reward__tab-counter"
+                  ></span>
+                  <button
+                    id="tombstone-reward-tab-next"
+                    type="button"
+                    class="tombstone-reward__tab-btn"
+                    aria-label="Next"
+                  >
+                    ›
+                  </button>
+                </div>
+              </article>
+              <button
+                id="tombstone-step-info-next"
+                type="button"
+                class="doom-btn tombstone-reward__action"
+                data-i18n="tombstone.step.infoNext"
+              >
+                CLAIM REWARDS
+              </button>
+            </section>
+
+            <section id="tombstone-step-reward" class="tombstone-step tombstone-step--reward hidden">
+              <h2 class="tombstone-reward__title" data-i18n="tombstone.step.rewardTitle">
+                REWARD SETTLEMENT
+              </h2>
+              <p class="tombstone-reward__subtitle" data-i18n="tombstone.step.rewardSubtitle">
+                Coins salvaged from the fallen.
+              </p>
+              <div class="tombstone-reward__reward-body">
+                <p id="tombstone-reward-count" class="tombstone-reward__count"></p>
+                <p id="tombstone-reward-coins" class="tombstone-reward__coins"></p>
+              </div>
+              <div class="tombstone-reward__reward-footer">
+                <button
+                  id="tombstone-step-reward-next"
+                  type="button"
+                  class="doom-btn tombstone-reward__action"
+                  data-i18n="tombstone.step.rewardNext"
+                >
+                  ROLL DICE
+                </button>
+              </div>
+            </section>
+
+            <section id="tombstone-step-dice" class="tombstone-step tombstone-step--dice hidden">
+              <h2 class="tombstone-reward__title" data-i18n="tombstone.step.diceTitle">
+                FEVER ROLL
+              </h2>
+              <p class="tombstone-reward__subtitle" data-i18n="tombstone.step.diceSubtitle">
+                Each tombstone grants one die. Total pips fuel Fever Time.
+              </p>
+              <div class="tombstone-reward__dice-body">
+                <div id="tombstone-reward-dice-row" class="tombstone-reward__dice-row"></div>
+                <p id="tombstone-reward-pips" class="tombstone-reward__pips"></p>
+              </div>
+              <div class="tombstone-reward__dice-footer">
+                <button
+                  id="tombstone-reward-continue-btn"
+                  type="button"
+                  class="doom-btn tombstone-reward__action tombstone-reward__action--fever"
+                  data-i18n="tombstone.continue"
+                  disabled
+                >
+                  FEVER TIME!
+                </button>
+              </div>
+            </section>
           </div>
         </div>
         <div id="boss-chest-modal" class="doom-modal boss-chest-modal hidden">

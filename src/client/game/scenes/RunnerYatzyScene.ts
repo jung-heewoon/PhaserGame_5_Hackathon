@@ -731,7 +731,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
       this.bossDirector?.tick(dt);
       this.spawnDirector?.update(dt);
       this.tombstoneDirector?.update();
-      this.tombstonePickupFlow?.tryPending(this.player?.pos.y ?? 0);
+      this.tombstonePickupFlow?.pollPlayerPickup(this.player);
       this.combat?.update(dt);
     } else if (this.session.freezeReason === 'dead') {
       this.syncDeadCamera();

@@ -1,9 +1,17 @@
 import type GameState from 'twopointfive-phaser-3/src/twopointfive/game.ts';
 import { spawnAheadY } from '../config/RunGameConfig.ts';
-import { TOMBSTONE_CONFIG } from '../config/TombstoneConfig.ts';
-import type TombstonePickupEntity from '../entities/TombstonePickupEntity.ts';
+import {
+  TOMBSTONE_CONFIG,
+  tombstonePickupOverlapsPlayer,
+  tombstoneVisualHeightPx,
+} from '../config/TombstoneConfig.ts';
+import TombstonePickupEntity from '../entities/TombstonePickupEntity.ts';
 import type RunnerPlayerEntity from '../entities/RunnerPlayerEntity.ts';
 import type { TombstoneRecord } from '../../../shared/tombstone.ts';
+import {
+  isDummyTombstoneUsername,
+  tombstoneDummiesForPlaytest,
+} from '../../../shared/tombstoneDummies.ts';
 import type { EntityPool } from './EntityPool.ts';
 import type { RunSession } from './RunSession.ts';
 import { tombstoneClient } from '../platform/reddit/TombstoneClient.ts';
@@ -41,10 +49,18 @@ export class TombstoneDirector {
     try {
       const data = await tombstoneClient.fetchTombstones();
       this.me = data.me;
-      this.queue = [...data.tombstones].sort((a, b) => a.triggerMs - b.triggerMs);
+      const tombstones =
+        data.tombstones.length > 0
+          ? data.tombstones
+          : tombstoneDummiesForPlaytest(data.me);
+      this.queue = [...tombstones].sort((a, b) => a.triggerMs - b.triggerMs);
       this.loaded = true;
     } catch (err) {
-      console.warn('tombstone hydrate failed', err);
+      console.warn('tombstone hydrate failed — using local dummies', err);
+      this.me = '';
+      this.queue = [...tombstoneDummiesForPlaytest('')].sort(
+        (a, b) => a.triggerMs - b.triggerMs,
+      );
       this.loaded = true;
     }
   }
@@ -61,13 +77,31 @@ export class TombstoneDirector {
     return out;
   }
 
-  collectMergeBand(playerY: number, source: TombstonePickupEntity): TombstonePickupEntity[] {
-    const band = TOMBSTONE_CONFIG.mergeBandPx;
+  collectNearbyAtPickup(
+    playerPosY: number,
+    playerSizeY: number,
+  ): TombstonePickupEntity[] {
+    const playerCy = playerPosY + playerSizeY / 2;
+    const visualH = tombstoneVisualHeightPx();
     return this.getActiveTombstones().filter((ent) => {
-      if (ent === source) return true;
       if (ent.isOwn || !ent.record) return false;
-      return Math.abs(ent.pos.y - playerY) <= band;
+      const tombCy = ent.pos.y + visualH / 2;
+      return Math.abs(tombCy - playerCy) <= TOMBSTONE_CONFIG.mergeBandPx;
     });
+  }
+
+  findPickupTrigger(
+    playerPosY: number,
+    playerSizeY: number,
+  ): TombstonePickupEntity[] {
+    return this.getActiveTombstones().filter((ent) => {
+      if (ent.isOwn || !ent.record || ent.collecting) return false;
+      return tombstonePickupOverlapsPlayer(ent.pos.y, playerPosY, playerSizeY);
+    });
+  }
+
+  getPlayerEntity(): RunnerPlayerEntity | null {
+    return this.getPlayer();
   }
 
   update(): void {
@@ -92,7 +126,8 @@ export class TombstoneDirector {
     const spawnY = spawnAheadY(player.pos.y);
     if (spawnY >= player.pos.y - 32) return;
 
-    const isOwn = record.username === this.me;
+    const isOwn =
+      record.username === this.me && !isDummyTombstoneUsername(record.username);
     const ent = this.entityPool.acquireTombstone(spawnY, record, isOwn);
     if (!ent) return;
     this.spawnedUsernames.add(record.username);

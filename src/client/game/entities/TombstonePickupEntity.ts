@@ -4,8 +4,7 @@ import type { EntityContext, ImageInfo } from 'twopointfive-phaser-3/src/twopoin
 import type { TombstoneRecord } from '../../../../shared/tombstone.ts';
 import {
   TOMBSTONE_CONFIG,
-  tombstoneCorridorWidthPx,
-  tombstoneSpawnX,
+  tombstonePickupOverlapsPlayer,
 } from '../config/TombstoneConfig.ts';
 import type RunnerPlayerEntity from './RunnerPlayerEntity.ts';
 import type { EntityPool } from '../systems/EntityPool.ts';
@@ -29,10 +28,10 @@ export default class TombstonePickupEntity extends TPFEntity {
     super(x, y, settings, context);
     this.checkAgainst = TPFEntity.TYPE.A;
     this.size = {
-      x: tombstoneCorridorWidthPx(),
-      y: TOMBSTONE_CONFIG.hitboxHeightPx,
+      x: TOMBSTONE_CONFIG.frameWidthPx,
+      y: TOMBSTONE_CONFIG.frameHeightPx,
     };
-    this.scale = 1;
+    this.scale = TOMBSTONE_CONFIG.displayScale;
     this.gravityFactor = 0;
     this.dynamicLight = false;
     this.zIndex = 2;
@@ -45,8 +44,8 @@ export default class TombstonePickupEntity extends TPFEntity {
     if (this.pickupImage) {
       this.animSheet = {
         image: this.pickupImage,
-        width: TOMBSTONE_CONFIG.visualHeightPx,
-        height: TOMBSTONE_CONFIG.visualHeightPx,
+        width: TOMBSTONE_CONFIG.frameWidthPx,
+        height: TOMBSTONE_CONFIG.frameHeightPx,
       };
       this.addAnim('idle', 10, [0]);
     }
@@ -57,7 +56,6 @@ export default class TombstonePickupEntity extends TPFEntity {
     }
     this.collecting = false;
     super.init(x, y, settings);
-    this.pos.x = tombstoneSpawnX();
   }
 
   update(): void {
@@ -67,24 +65,63 @@ export default class TombstonePickupEntity extends TPFEntity {
       this.pos.z = (Math.cos(this.bounceTimer.delta() * 2.5) + 1) * 4;
     }
     super.update();
-    this.pos.x = tombstoneSpawnX();
+    this.tryLanePickup();
   }
 
   check(other: TPFEntity): void {
     if (other.type !== TPFEntity.TYPE.A) return;
-    const player = other as RunnerPlayerEntity;
+    this.tryCollect(other as RunnerPlayerEntity);
+  }
+
+  tryPickupFromPlayer(player: RunnerPlayerEntity): void {
+    this.tryCollect(player);
+  }
+
+  private tryLanePickup(): void {
+    const player = this.findPlayer();
+    if (!player) return;
+    this.tryCollect(player);
+  }
+
+  private tryCollect(player: RunnerPlayerEntity): void {
     if (player.isDead || !this.record) return;
     if (this.isOwn) return;
     if (this.collecting) return;
     if (this.session?.isGameplayFrozen) {
       if (this.session.freezeReason === 'yatzy' || this.session.freezeReason === 'bossReward') {
         this.session.pendingTombstonePickup = true;
-        this.collecting = false;
       }
       return;
     }
+    if (!tombstonePickupOverlapsPlayer(this.pos.y, player.pos.y, player.size.y)) return;
 
     this.collecting = true;
     this.entityPool?.notifyTombstonePickup(this);
+  }
+
+  private findPlayer(): RunnerPlayerEntity | null {
+    const game = this.context.game;
+    if (!game) return null;
+    for (const ent of game.entities) {
+      if (ent.type === TPFEntity.TYPE.A && !ent._killed) {
+        return ent as RunnerPlayerEntity;
+      }
+    }
+    return null;
+  }
+
+  getSpriteDisplayHeight(): number {
+    return TOMBSTONE_CONFIG.frameHeightPx * this.scale;
+  }
+
+  /** 데미지 숫자·BossDamageHudToast와 동일한 월드 앵커 (라벨 중심) */
+  getLabelAnchor(): { x: number; y: number; z: number } {
+    const spriteH = this.getSpriteDisplayHeight();
+    const centerY = this.pos.y + this.size.y / 2;
+    return {
+      x: this.pos.x + this.size.x / 2,
+      y: centerY - spriteH * 0.5 - TOMBSTONE_CONFIG.labelHeadMarginPx,
+      z: this.pos.z + TOMBSTONE_CONFIG.labelOffsetZ,
+    };
   }
 }

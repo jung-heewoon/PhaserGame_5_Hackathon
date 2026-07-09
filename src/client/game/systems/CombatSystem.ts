@@ -9,6 +9,8 @@ import type { GunViewDom } from '../ui/GunViewDom.ts';
 import { upgradeStore } from './UpgradeStore.ts';
 import { mobileControls } from '../ui/MobileControlsDom.ts';
 import { sfxManager } from './SfxManager.ts';
+import { feverTimeSystem } from './FeverTimeSystem.ts';
+import { TOMBSTONE_CONFIG } from '../config/TombstoneConfig.ts';
 
 export class CombatSystem {
   private fireCooldownRemainingMs = 0;
@@ -96,7 +98,9 @@ export class CombatSystem {
     const baseEntry = this.state.weaponEntry;
     if (this.fireCooldownRemainingMs > 0) return;
 
-    this.fireCooldownRemainingMs = baseEntry.fireRateMs;
+    this.fireCooldownRemainingMs =
+      baseEntry.fireRateMs /
+      (feverTimeSystem.isActive ? TOMBSTONE_CONFIG.feverAttackSpeedMul : 1);
     const fired = this.state.consumeAmmo();
     if (!fired) return;
 

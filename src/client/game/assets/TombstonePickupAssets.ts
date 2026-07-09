@@ -19,4 +19,4 @@ export function buildTombstonePickupImage(
   return tpf.loadImage(tex);
 }
 
-export const TOMBSTONE_FRAME_PX = TOMBSTONE_CONFIG.visualHeightPx;
+export const TOMBSTONE_FRAME_PX = TOMBSTONE_CONFIG.frameWidthPx;

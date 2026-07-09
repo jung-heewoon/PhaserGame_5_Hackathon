@@ -6,20 +6,14 @@ import {parseLocaleCsv} from './CsvParser.ts';
 
 export type LocaleId = 'ko' | 'en';
 
+const DEFAULT_LOCALE: LocaleId = 'en';
 const LOCALE_URL = publicUrl('locale/strings.csv');
-
-function resolveLocaleFallback(): LocaleId | null {
-  const lang = navigator.language?.toLowerCase() ?? '';
-  if (lang.startsWith('ko')) return 'ko';
-  if (lang.startsWith('en')) return 'en';
-  return null;
-}
 
 type LocaleTable = Map<string, { ko: string; en: string }>;
 
 class LocaleManagerImpl {
   private table: LocaleTable = new Map();
-  private locale: LocaleId = 'ko';
+  private locale: LocaleId = DEFAULT_LOCALE;
   private listeners = new Set<() => void>();
   private loaded = false;
   private hydrated = false;
@@ -43,16 +37,15 @@ class LocaleManagerImpl {
     if (initial) {
       this.locale = initial;
     } else if (!this.hydrated) {
-      this.locale = 'ko';
+      this.locale = DEFAULT_LOCALE;
     }
     document.documentElement.lang = this.locale;
   }
 
-  /** persistence hydrate 이후 호출 — 저장값 또는 SDK locale fallback 적용 */
+  /** persistence hydrate 이후 호출 — 저장값 없으면 기본 영어 */
   applyHydratedLocale(): void {
     const stored = this.readStoredLocale();
-    const fallback = resolveLocaleFallback();
-    this.locale = stored ?? fallback ?? 'ko';
+    this.locale = stored ?? DEFAULT_LOCALE;
     this.hydrated = true;
     document.documentElement.lang = this.locale;
   }

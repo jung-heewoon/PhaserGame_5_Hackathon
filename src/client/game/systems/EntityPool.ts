@@ -35,8 +35,7 @@ import type { DamageNumberVfx } from './DamageNumberVfx.ts';
 import type { RunSession } from './RunSession.ts';
 import type { PickupKind } from '../config/PickupFlyConfig.ts';
 import { unregisterTombstoneLabel } from '../ui/TombstoneLabelDom.ts';
-import { TOMBSTONE_CONFIG } from '../config/TombstoneConfig.ts';
-import { tombstoneSpawnX } from '../config/TombstoneConfig.ts';
+import { TOMBSTONE_CONFIG, randomTombstoneSpawnPosX } from '../config/TombstoneConfig.ts';
 import type { TombstoneRecord } from '../../../shared/tombstone.ts';
 
 const STASH_X = -9999;
@@ -791,7 +790,7 @@ export class EntityPool {
     record: TombstoneRecord,
     isOwn: boolean,
   ): TombstonePickupEntity {
-    const x = tombstoneSpawnX();
+    const x = randomTombstoneSpawnPosX();
     ent._killed = false;
     ent.checkAgainst = TPFEntity.TYPE.A;
     ent.type = TPFEntity.TYPE.NONE;
@@ -821,7 +820,7 @@ export class EntityPool {
     isOwn: boolean,
   ): TombstonePickupEntity | null {
     if (!this.gs || !this.session) return null;
-    const x = tombstoneSpawnX();
+    const x = randomTombstoneSpawnPosX();
     const ent = this.gs.spawnEntity(TombstonePickupEntity, x, y, {
       entityPool: this,
       pickupImage: this.tombstoneImage,
