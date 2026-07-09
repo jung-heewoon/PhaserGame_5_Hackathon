@@ -46,17 +46,19 @@ weeklyDefense.kills,누적 처치,KILLS
 weeklyDefense.target,주간 목표,TARGET
 weeklyDefense.buffActive,런 시작 주사위 보유,STARTING DICE BUFF
 weeklyDefense.buffInactive,비활성,INACTIVE
-weeklyDefense.buffStatus,다음 주 버프,NEXT WEEK BUFF
+weeklyDefense.buffStatus,현재 버프,CURRENT BUFF
 weeklyDefense.detailTitle,작전 브리핑,OPERATION BRIEFING
 weeklyDefense.detailSubtitle,서브레딧 주간 침공 방어 현황,Subreddit weekly invasion defense
 weeklyDefense.tapDetail,탭 · 상세,TAP · INFO
 weeklyDefense.resetHint,매주 월요일 00:00 (UTC)에 초기화됩니다,Resets every Monday 00:00 UTC
-weeklyDefense.rewardActiveBadge,보상 활성,REWARD ACTIVE
-weeklyDefense.rewardPendingBadge,달성 시 해금,UNLOCK ON CLEAR
-weeklyDefense.rewardActive,런 시작 시 주사위 {amount}개 보유,Start each run with {amount} dice
-weeklyDefense.rewardPending,달성 시 런 시작 주사위 {amount}개,On clear: {amount} dice at run start
-weeklyDefense.rewardActiveDesc,지난주 방어 성공! 재시작·새 런 모두 주사위 {amount}개를 들고 시작합니다.,Defense cleared! Every run starts with {amount} dice in hand.
-weeklyDefense.rewardPendingDesc,남은 처치 {remaining} — 달성 시 다음 주부터 런 시작 주사위 {amount}개 보유.,{remaining} kills left. Success grants {amount} starting dice for all agents.
+weeklyDefense.myContribution,내 기여,MY CONTRIBUTION
+weeklyDefense.myContributionShare,({percent}%),({percent}%)
+weeklyDefense.rewardCurrentActiveBadge,적용 중,ACTIVE NOW
+weeklyDefense.rewardCurrentInactiveBadge,미적용,NOT ACTIVE
+weeklyDefense.rewardCurrentActive,현재 런 시작 주사위 {amount}개 보유,Start runs with {amount} dice now
+weeklyDefense.rewardCurrentInactive,런 시작 주사위 보너스 없음,No starting dice bonus
+weeklyDefense.rewardCurrentActiveDesc,지금 플레이하는 모든 런이 주사위 {amount}개로 시작합니다.,All runs currently start with {amount} dice in hand.
+weeklyDefense.rewardCurrentInactiveDesc,현재 주사위 보너스가 적용되지 않습니다.,Starting dice bonus is not active right now.
 leaderboard.title,랭킹,RANKING
 leaderboard.thread,이 스레드,THREAD
 leaderboard.global,👑 전체,👑 GLOBAL

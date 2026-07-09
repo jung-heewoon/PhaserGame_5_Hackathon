@@ -921,6 +921,18 @@
   padding: 12px 14px 8px;
   scrollbar-width: thin;
   scrollbar-color: var(--doom-red) rgba(0, 0, 0, 0.4);
+  cursor: grab;
+  touch-action: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gameover-leaderboard__body--dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.gameover-leaderboard__body--dragging * {
+  pointer-events: none;
 }
 
 .gameover-leaderboard__body::-webkit-scrollbar {

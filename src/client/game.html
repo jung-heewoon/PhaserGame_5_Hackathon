@@ -548,6 +548,19 @@
                 >
               </div>
             </div>
+            <div class="weekly-defense-card__totals" aria-hidden="true">
+              <span
+                id="weekly-defense-card-kills"
+                class="weekly-defense-card__stat"
+                >0</span
+              >
+              <span class="weekly-defense-card__sep">/</span>
+              <span
+                id="weekly-defense-card-target"
+                class="weekly-defense-card__stat"
+                >0</span
+              >
+            </div>
             <p
               class="weekly-defense-card__hint"
               data-i18n="weeklyDefense.tapDetail"
@@ -581,19 +594,50 @@
             >
               Subreddit weekly invasion defense status
             </p>
-            <div class="weekly-defense-detail__gauge-wrap">
-              <div class="weekly-defense-detail__gauge" aria-hidden="true">
-                <div
-                  id="weekly-defense-detail-gauge-fill"
-                  class="weekly-defense-detail__gauge-fill"
-                ></div>
+            <section class="weekly-defense-detail__progress">
+              <div class="weekly-defense-detail__gauge-wrap">
+                <div class="weekly-defense-detail__gauge" aria-hidden="true">
+                  <div
+                    id="weekly-defense-detail-gauge-fill"
+                    class="weekly-defense-detail__gauge-fill"
+                  ></div>
+                </div>
+                <span
+                  id="weekly-defense-detail-percent"
+                  class="weekly-defense-detail__percent"
+                  >0%</span
+                >
               </div>
-              <span
-                id="weekly-defense-detail-percent"
-                class="weekly-defense-detail__percent"
-                >0%</span
-              >
-            </div>
+              <div class="weekly-defense-detail__totals">
+                <div class="weekly-defense-detail__total-item">
+                  <span
+                    class="weekly-defense-detail__total-label"
+                    data-i18n="weeklyDefense.kills"
+                    >KILLS</span
+                  >
+                  <span
+                    id="weekly-defense-detail-kills"
+                    class="weekly-defense-detail__total-value"
+                    >0</span
+                  >
+                </div>
+                <span class="weekly-defense-detail__total-sep" aria-hidden="true"
+                  >/</span
+                >
+                <div class="weekly-defense-detail__total-item">
+                  <span
+                    class="weekly-defense-detail__total-label"
+                    data-i18n="weeklyDefense.target"
+                    >TARGET</span
+                  >
+                  <span
+                    id="weekly-defense-detail-target"
+                    class="weekly-defense-detail__total-value"
+                    >0</span
+                  >
+                </div>
+              </div>
+            </section>
             <section
               id="weekly-defense-detail-reward"
               class="weekly-defense-detail__reward"
@@ -601,8 +645,8 @@
               <span
                 id="weekly-defense-detail-reward-badge"
                 class="weekly-defense-detail__reward-badge"
-                data-i18n="weeklyDefense.rewardPendingBadge"
-                >UNLOCK ON CLEAR</span
+                data-i18n="weeklyDefense.rewardCurrentInactiveBadge"
+                >NOT ACTIVE</span
               >
               <div class="weekly-defense-detail__reward-main">
                 <div
@@ -614,7 +658,7 @@
                   <span
                     id="weekly-defense-detail-reward-amount"
                     class="weekly-defense-detail__reward-amount"
-                    >+100</span
+                    >100</span
                   >
                   <p
                     id="weekly-defense-detail-reward-label"
@@ -627,22 +671,25 @@
                 class="weekly-defense-detail__reward-desc"
               ></p>
             </section>
-            <dl class="weekly-defense-detail__stats">
-              <div class="weekly-defense-detail__row">
-                <dt data-i18n="weeklyDefense.kills">KILLS</dt>
-                <dd id="weekly-defense-detail-kills">0</dd>
+            <section class="weekly-defense-detail__mine">
+              <span
+                class="weekly-defense-detail__mine-label"
+                data-i18n="weeklyDefense.myContribution"
+                >MY CONTRIBUTION</span
+              >
+              <div class="weekly-defense-detail__mine-values">
+                <span
+                  id="weekly-defense-detail-my-kills"
+                  class="weekly-defense-detail__mine-kills"
+                  >0</span
+                >
+                <span
+                  id="weekly-defense-detail-my-percent"
+                  class="weekly-defense-detail__mine-percent"
+                  >(0%)</span
+                >
               </div>
-              <div class="weekly-defense-detail__row">
-                <dt data-i18n="weeklyDefense.target">TARGET</dt>
-                <dd id="weekly-defense-detail-target">0</dd>
-              </div>
-              <div class="weekly-defense-detail__row">
-                <dt data-i18n="weeklyDefense.buffStatus">BUFF</dt>
-                <dd id="weekly-defense-detail-buff" data-i18n="weeklyDefense.buffInactive">
-                  INACTIVE
-                </dd>
-              </div>
-            </dl>
+            </section>
             <p
               id="weekly-defense-detail-reset"
               class="weekly-defense-detail__reset"

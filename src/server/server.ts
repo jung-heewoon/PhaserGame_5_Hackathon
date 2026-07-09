@@ -203,7 +203,8 @@ async function routeClaimTombstones(
 }
 
 async function routeGetWeeklyDefense(): Promise<GetWeeklyDefenseRsp> {
-  return getWeeklyDefenseStatus()
+  const username = await dbGetUsername()
+  return getWeeklyDefenseStatus(username)
 }
 
 async function routeContributeWeeklyDefense(

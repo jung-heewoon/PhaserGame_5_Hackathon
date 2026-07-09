@@ -2,6 +2,7 @@ import {redis} from '@devvit/web/server'
 import type {ContributeWeeklyDefenseRsp} from '../shared/api.ts'
 import {
   WEEKLY_DEFENSE_CONFIG,
+  computeMySharePercent,
   computeWeeklyPercent,
   mondayUtcWeekStartMs,
   validateRunKills,
@@ -56,17 +57,48 @@ async function seedDefaultsIfMissing(): Promise<void> {
   }
 }
 
-async function readState(weekResetMs: number): Promise<WeeklyDefenseStatus> {
+function userContribKey(weekResetMs: number): string {
+  return `global:contrib:${weekResetMs}`
+}
+
+async function readUserContrib(
+  weekResetMs: number,
+  username: string,
+): Promise<number> {
+  const raw = await redis.hGet(userContribKey(weekResetMs), username)
+  if (!raw) return 0
+  const n = parseInt(raw, 10)
+  return Number.isFinite(n) ? n : 0
+}
+
+async function addUserContrib(
+  weekResetMs: number,
+  username: string,
+  amount: number,
+): Promise<void> {
+  if (amount <= 0) return
+  const key = userContribKey(weekResetMs)
+  const current = await readUserContrib(weekResetMs, username)
+  await redis.hSet(key, {[username]: String(current + amount)})
+}
+
+async function readState(
+  weekResetMs: number,
+  username?: string,
+): Promise<WeeklyDefenseStatus> {
   await seedDefaultsIfMissing()
   const kills = await readInt(KEYS.kills, 0)
   const target = await readInt(KEYS.target, WEEKLY_DEFENSE_CONFIG.baseTarget)
   const buffActive = await readBool(KEYS.buffActive, false)
+  const myKills = username ? await readUserContrib(weekResetMs, username) : 0
   return {
     kills,
     target,
     percent: computeWeeklyPercent(kills, target),
     buffActive,
     weekResetMs,
+    myKills,
+    myPercent: computeMySharePercent(myKills, kills),
   }
 }
 
@@ -105,9 +137,11 @@ export async function ensureCurrentWeek(): Promise<number> {
   return weekStart
 }
 
-export async function getWeeklyDefenseStatus(): Promise<WeeklyDefenseStatus> {
+export async function getWeeklyDefenseStatus(
+  username?: string,
+): Promise<WeeklyDefenseStatus> {
   const weekResetMs = await ensureCurrentWeek()
-  return readState(weekResetMs)
+  return readState(weekResetMs, username)
 }
 
 export async function contributeWeeklyDefense(
@@ -122,7 +156,7 @@ export async function contributeWeeklyDefense(
         `weekly-defense contribute rejected for ${username}: reason=${validation.reason ?? 'unknown'} kills=${req.monsterKills} elapsed=${req.runElapsedMs}`,
       )
     }
-    const status = await getWeeklyDefenseStatus()
+    const status = await getWeeklyDefenseStatus(username)
     return {...status, contributed: 0, rejected: true}
   }
 
@@ -132,8 +166,11 @@ export async function contributeWeeklyDefense(
   if (contributed > 0) {
     const current = await readInt(KEYS.kills, 0)
     await redis.set(KEYS.kills, String(current + contributed))
+    if (username) {
+      await addUserContrib(weekResetMs, username, contributed)
+    }
   }
 
-  const status = await readState(weekResetMs)
+  const status = await readState(weekResetMs, username)
   return {...status, contributed, rejected: false}
 }

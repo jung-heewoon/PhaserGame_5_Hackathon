@@ -2,6 +2,7 @@ import { DICE_ASSETS } from '../assets/DiceAssets.ts';
 import { localeManager } from '../locale/LocaleManager.ts';
 import {
   WEEKLY_DEFENSE_CONFIG,
+  applyWeeklyDefenseDebugOverrides,
   type WeeklyDefenseStatus,
 } from '../../../shared/weeklyDefense.ts';
 
@@ -54,6 +55,16 @@ function formatKillsTarget(status: WeeklyDefenseStatus): string {
   return `${status.kills.toLocaleString()} / ${status.target.toLocaleString()}`;
 }
 
+function formatCompactCount(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 10_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toLocaleString();
+}
+
+function applyDebugWeeklyStatus(status: WeeklyDefenseStatus): WeeklyDefenseStatus {
+  return applyWeeklyDefenseDebugOverrides(status);
+}
+
 function ensureDiceIcon(): void {
   const iconEl = document.getElementById('weekly-defense-detail-dice-icon');
   if (iconEl && !iconEl.style.backgroundImage) {
@@ -75,44 +86,52 @@ function bindReward(status: WeeklyDefenseStatus): void {
 
   if (badgeEl) {
     badgeEl.textContent = status.buffActive
-      ? localeManager.t('weeklyDefense.rewardActiveBadge')
-      : localeManager.t('weeklyDefense.rewardPendingBadge');
+      ? localeManager.t('weeklyDefense.rewardCurrentActiveBadge')
+      : localeManager.t('weeklyDefense.rewardCurrentInactiveBadge');
   }
   if (amountEl) amountEl.textContent = String(amount);
   if (labelEl) {
     labelEl.textContent = status.buffActive
-      ? localeManager.t('weeklyDefense.rewardActive', { amount: String(amount) })
-      : localeManager.t('weeklyDefense.rewardPending', { amount: String(amount) });
+      ? localeManager.t('weeklyDefense.rewardCurrentActive', { amount: String(amount) })
+      : localeManager.t('weeklyDefense.rewardCurrentInactive', { amount: String(amount) });
   }
   if (descEl) {
-    const remaining = Math.max(0, status.target - status.kills);
     descEl.textContent = status.buffActive
-      ? localeManager.t('weeklyDefense.rewardActiveDesc', { amount: String(amount) })
-      : localeManager.t('weeklyDefense.rewardPendingDesc', {
-          remaining: remaining.toLocaleString(),
-          amount: String(amount),
-        });
+      ? localeManager.t('weeklyDefense.rewardCurrentActiveDesc', { amount: String(amount) })
+      : localeManager.t('weeklyDefense.rewardCurrentInactiveDesc', { amount: String(amount) });
   }
+}
+
+function bindMyContribution(status: WeeklyDefenseStatus): void {
+  const killsEl = document.getElementById('weekly-defense-detail-my-kills');
+  const percentEl = document.getElementById('weekly-defense-detail-my-percent');
+  if (killsEl) killsEl.textContent = status.myKills.toLocaleString();
+  if (percentEl) {
+    percentEl.textContent = localeManager.t('weeklyDefense.myContributionShare', {
+      percent: status.myPercent.toFixed(1),
+    });
+  }
+}
+
+function bindCardTotals(status: WeeklyDefenseStatus): void {
+  const killsEl = document.getElementById('weekly-defense-card-kills');
+  const targetEl = document.getElementById('weekly-defense-card-target');
+  if (killsEl) killsEl.textContent = formatCompactCount(status.kills);
+  if (targetEl) targetEl.textContent = formatCompactCount(status.target);
 }
 
 function bindDetail(status: WeeklyDefenseStatus): void {
   const killsEl = document.getElementById('weekly-defense-detail-kills');
   const targetEl = document.getElementById('weekly-defense-detail-target');
-  const buffEl = document.getElementById('weekly-defense-detail-buff');
   const percentEl = document.getElementById('weekly-defense-detail-percent');
   const fillEl = document.getElementById('weekly-defense-detail-gauge-fill');
 
   if (killsEl) killsEl.textContent = status.kills.toLocaleString();
   if (targetEl) targetEl.textContent = status.target.toLocaleString();
-  if (buffEl) {
-    buffEl.textContent = status.buffActive
-      ? localeManager.t('weeklyDefense.buffActive')
-      : localeManager.t('weeklyDefense.buffInactive');
-    buffEl.classList.toggle('weekly-defense-detail__buff--active', status.buffActive);
-  }
   if (percentEl) percentEl.textContent = `${Math.min(100, status.percent).toFixed(1)}%`;
   if (fillEl) fillEl.style.width = `${Math.min(100, status.percent)}%`;
   bindReward(status);
+  bindMyContribution(status);
 }
 
 function openDetailModal(): void {
@@ -177,27 +196,30 @@ export function showWeeklyDefenseOnGameOver(status: WeeklyDefenseStatus | null |
     return;
   }
 
-  cachedStatus = status;
+  cachedStatus = applyDebugWeeklyStatus(status);
   card.classList.remove('weekly-defense-card--loading', 'hidden');
+  card.classList.toggle('weekly-defense-card--buff', cachedStatus.buffActive);
 
   countToken += 1;
   const token = countToken;
-  animatePercent(document.getElementById('weekly-defense-percent'), status.percent, token);
+  const display = cachedStatus;
+  animatePercent(document.getElementById('weekly-defense-percent'), display.percent, token);
   animateVerticalGaugeFill(
     document.getElementById('weekly-defense-gauge-fill'),
-    status.percent,
+    display.percent,
     token,
   );
+  bindCardTotals(display);
 
   const label = localeManager.t('weeklyDefense.clearProgress');
   card.setAttribute(
     'aria-label',
-    `${label}: ${status.percent.toFixed(1)}%, ${formatKillsTarget(status)}`,
+    `${label}: ${display.percent.toFixed(1)}%, ${formatKillsTarget(display)}`,
   );
 }
 
 export function refreshWeeklyDefenseLocale(): void {
-  if (cachedStatus) {
-    if (detailOpen) bindDetail(cachedStatus);
-  }
+  if (!cachedStatus) return;
+  bindCardTotals(cachedStatus);
+  if (detailOpen) bindDetail(cachedStatus);
 }

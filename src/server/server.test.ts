@@ -438,6 +438,8 @@ test('get weekly defense status initial', async () => {
   assert.equal(body.target, WEEKLY_DEFENSE_CONFIG.baseTarget)
   assert.equal(body.buffActive, false)
   assert.equal(body.percent, 0)
+  assert.equal(body.myKills, 0)
+  assert.equal(body.myPercent, 0)
 })
 
 test('contribute weekly defense accumulates kills', async () => {
@@ -454,6 +456,8 @@ test('contribute weekly defense accumulates kills', async () => {
   const body = (await rsp.json()) as ContributeWeeklyDefenseRsp
   assert.equal(body.contributed, 300)
   assert.equal(body.kills, 300)
+  assert.equal(body.myKills, 300)
+  assert.equal(body.myPercent, 100)
   assert.equal(body.rejected, false)
 })
 

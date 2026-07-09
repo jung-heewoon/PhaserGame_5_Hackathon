@@ -15,8 +15,15 @@ const CROWN_SVG = `<svg class="gameover-leaderboard__podium-crown" viewBox="0 0 
 let activeScope: LeaderboardScope = 'post';
 let cachedData: GetLeaderboardRsp | null = null;
 let bound = false;
+let scrollBound = false;
 let pendingHighScore = 0;
 let loadToken = 0;
+
+const SCROLL_DRAG_THRESHOLD_PX = 6;
+
+function isLeaderboardBodyScrollable(body: HTMLElement): boolean {
+  return body.scrollHeight > body.clientHeight + 1;
+}
 
 function formatUsername(username: string): string {
   return username.startsWith('u/') ? username : `u/${username}`;
@@ -50,7 +57,7 @@ function setTabActive(scope: LeaderboardScope): void {
   }
 }
 
-function renderPodium(entries: LeaderboardEntry[], compact: boolean): string {
+function renderPodium(entries: LeaderboardEntry[]): string {
   const top3 = entries.filter(entry => entry.rank <= 3);
   if (top3.length === 0) return '';
 
@@ -75,7 +82,7 @@ function renderPodium(entries: LeaderboardEntry[], compact: boolean): string {
     </div>`;
   };
 
-  return `<div class="gameover-leaderboard__podium${compact ? ' gameover-leaderboard__podium--compact' : ''}">
+  return `<div class="gameover-leaderboard__podium">
     ${slot(second, 'second')}
     ${slot(first, 'first')}
     ${slot(third, 'third')}
@@ -146,8 +153,7 @@ function renderScope(scope: LeaderboardScope): void {
     return;
   }
 
-  const compact = scope === 'global';
-  bodyEl.innerHTML = `${renderPodium(data.entries, compact)}${renderList(data.entries)}`;
+  bodyEl.innerHTML = `${renderPodium(data.entries)}${renderList(data.entries)}`;
   renderMe(scope, data);
 }
 
@@ -166,6 +172,79 @@ function bindTabs(): void {
       renderScope(scope);
     });
   }
+}
+
+/** 리스트 영역을 위/아래로 드래그(마우스·터치)해서 스크롤 */
+function bindLeaderboardBodyScroll(): void {
+  if (scrollBound) return;
+  const body = document.getElementById('gameover-leaderboard-body');
+  if (!body) return;
+  scrollBound = true;
+
+  let pointerId: number | null = null;
+  let startY = 0;
+  let startScroll = 0;
+  let dragging = false;
+
+  body.addEventListener(
+    'wheel',
+    (event) => {
+      if (!isLeaderboardBodyScrollable(body)) return;
+      event.stopPropagation();
+    },
+    {passive: true},
+  );
+
+  body.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (!isLeaderboardBodyScrollable(body)) return;
+
+    pointerId = event.pointerId;
+    startY = event.clientY;
+    startScroll = body.scrollTop;
+    dragging = false;
+    try {
+      body.setPointerCapture(event.pointerId);
+    } catch {
+      /* ignore */
+    }
+  });
+
+  body.addEventListener(
+    'pointermove',
+    (event) => {
+      if (pointerId === null || event.pointerId !== pointerId) return;
+      if (!isLeaderboardBodyScrollable(body)) return;
+
+      const dy = event.clientY - startY;
+      if (!dragging) {
+        if (Math.abs(dy) < SCROLL_DRAG_THRESHOLD_PX) return;
+        dragging = true;
+        body.classList.add('gameover-leaderboard__body--dragging');
+      }
+
+      body.scrollTop = startScroll - dy;
+      event.preventDefault();
+    },
+    {passive: false},
+  );
+
+  const endDrag = (event: PointerEvent): void => {
+    if (pointerId === null || event.pointerId !== pointerId) return;
+    if (dragging) {
+      body.classList.remove('gameover-leaderboard__body--dragging');
+      try {
+        body.releasePointerCapture(pointerId);
+      } catch {
+        /* ignore */
+      }
+    }
+    pointerId = null;
+    dragging = false;
+  };
+
+  body.addEventListener('pointerup', endDrag);
+  body.addEventListener('pointercancel', endDrag);
 }
 
 function withDummyFallback(data: GetLeaderboardRsp | null): GetLeaderboardRsp {
@@ -233,6 +312,7 @@ export function resetGameOverLeaderboard(): void {
 
 export function showGameOverLeaderboard(highScore: number): void {
   bindTabs();
+  bindLeaderboardBodyScroll();
   pendingHighScore = highScore;
   setTabActive('post');
   void loadLeaderboard(highScore > 0 ? highScore : null);

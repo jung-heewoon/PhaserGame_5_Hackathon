@@ -13,12 +13,22 @@ export const WEEKLY_DEFENSE_CONFIG = {
   rejectMultiplier: 2,
 } as const
 
+/** @temporary 테스트용 — 배포 전 비활성화 */
+export const WEEKLY_DEFENSE_DEBUG = {
+  forcePercent: 100 as number | null,
+  forceBuffActive: true,
+} as const
+
 export type WeeklyDefenseStatus = {
   kills: number
   target: number
   percent: number
   buffActive: boolean
   weekResetMs: number
+  /** Current user's accepted kills contributed this week. */
+  myKills: number
+  /** Share of subreddit total kills (0–100). */
+  myPercent: number
 }
 
 export type RunKillPayload = {
@@ -53,6 +63,25 @@ export function mondayUtcWeekStartMs(now = Date.now()): number {
 export function computeWeeklyPercent(kills: number, target: number): number {
   if (target <= 0) return 0
   return (kills / target) * 100
+}
+
+export function computeMySharePercent(myKills: number, totalKills: number): number {
+  if (totalKills <= 0) return 0
+  return (myKills / totalKills) * 100
+}
+
+/** Client test overrides — no-op when WEEKLY_DEFENSE_DEBUG is disabled. */
+export function applyWeeklyDefenseDebugOverrides(
+  status: WeeklyDefenseStatus,
+): WeeklyDefenseStatus {
+  let next = status
+  if (WEEKLY_DEFENSE_DEBUG.forcePercent !== null) {
+    next = {...next, percent: WEEKLY_DEFENSE_DEBUG.forcePercent}
+  }
+  if (WEEKLY_DEFENSE_DEBUG.forceBuffActive) {
+    next = {...next, buffActive: true}
+  }
+  return next
 }
 
 export function formatDefenseGaugeBar(percent: number, width = 10): string {

@@ -27,7 +27,7 @@ export const TOMBSTONE_CONFIG = {
    * 렌더 quad만 화면 아래로 (픽업·충돌 Y는 그대로).
    * Tombstone.png 하단 투명 여백 보정.
    */
-  visualSinkZ: 10,
+  visualSinkZ: 5,
   /** 라벨 — 스프라이트 상단에서 위로 (HUD px) */
   labelGapPx: 3,
 } as const;

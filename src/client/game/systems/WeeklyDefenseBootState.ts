@@ -1,10 +1,13 @@
-import type { WeeklyDefenseStatus } from '../../../../shared/weeklyDefense.ts';
+import {
+  applyWeeklyDefenseDebugOverrides,
+  type WeeklyDefenseStatus,
+} from '../../../shared/weeklyDefense.ts';
 
 class WeeklyDefenseBootStateImpl {
   private status: WeeklyDefenseStatus | null = null;
 
   set(status: WeeklyDefenseStatus): void {
-    this.status = status;
+    this.status = applyWeeklyDefenseDebugOverrides(status);
   }
 
   get buffActive(): boolean {
