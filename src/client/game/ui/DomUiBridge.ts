@@ -8,6 +8,7 @@ import { refreshBossChestModalLocale } from './BossChestModalDom.ts';
 import { refreshGameOverLeaderboardLocale } from './GameOverLeaderboardDom.ts';
 import { refreshWeeklyDefenseLocale } from './WeeklyDefenseGameOverDom.ts';
 import { refreshTutorialLocale } from './TutorialModalDom.ts';
+import { refreshGameOverDeathReportLocale } from './GameOverModalDom.ts';
 
 class DomUiBridgeImpl {
   private toastEl: HTMLElement | null = null;
@@ -46,6 +47,7 @@ class DomUiBridgeImpl {
     refreshTutorialLocale();
     refreshGameOverLeaderboardLocale();
     refreshWeeklyDefenseLocale();
+    refreshGameOverDeathReportLocale();
   }
 
   setLayerInteractive(on: boolean): void {

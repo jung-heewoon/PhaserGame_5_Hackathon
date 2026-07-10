@@ -39,6 +39,14 @@ gameover.kills,처치,KILLS
 gameover.coins,획득 코인,COINS
 gameover.retry,다시하기,RETRY
 gameover.upgrade,업그레이드,UPGRADE
+gameover.deathReport.submit,🪦 전사 보고서 송신,🪦 Submit Battle Report
+gameover.deathReport.submitNewRecord,🪦 신기록 · 보고서 송신,🪦 Send Report · NEW
+gameover.deathReport.disclaimer,레딧 계정 이름으로 댓글이 작성됩니다. 주간 전황도 함께 공유됩니다.,Posts a comment under your Reddit username and shares weekly defense status.
+gameover.deathReport.disclaimerNewRecord,신기록 달성! 레딧 계정 이름으로 전사 보고서가 게시됩니다.,New record! Posts your battle report under your Reddit username.
+gameover.deathReport.sending,송신 중…,Sending…
+gameover.deathReport.sent,송신 완료,Sent
+gameover.deathReport.failed,송신 실패 — 다시 시도,Send failed — retry
+gameover.deathReport.cooldown,{minutes}분 후 다시 송신 가능,Retry in {minutes} min
 weeklyDefense.title,방어군 작전,DEFENSE OPS
 weeklyDefense.clearProgress,클리어 현황,CLEAR PROGRESS
 weeklyDefense.percent,{percent}%,{percent}%

@@ -2,14 +2,17 @@ import {context, reddit, redis} from '@devvit/web/server'
 import type {
   ClaimTombstonesRsp,
   GetTombstonesRsp,
+  SubmitTombstoneCommentReq,
   UpsertTombstoneReq,
   UpsertTombstoneRsp,
 } from '../shared/api.ts'
 import {
+  buildBattleReportPersonalSection,
   DEATH_REASON_COUNT,
-  deathReasonCommentText,
   type TombstoneRecord,
+  TOMBSTONE_MIN_PLAY_MS,
   tombstoneCoinBonus,
+  tombstoneCommentCooldownMs,
 } from '../shared/tombstone.ts'
 import {
   formatDefenseGaugeBar,
@@ -21,12 +24,8 @@ function tombstoneKey(postId: string): string {
   return `tombstone:post:${postId}`
 }
 
-function commentIdempotencyKey(
-  username: string,
-  postId: string,
-  updatedAt: number,
-): string {
-  return `user:${username}:tombstone-comment:${postId}:${updatedAt}`
+function commentLastAtKey(username: string, postId: string): string {
+  return `user:${username}:tombstone-comment-last:${postId}`
 }
 
 export function resolveTombstonePostKey(postId: string | undefined): string {
@@ -87,36 +86,32 @@ type RedditCommentApi = {
 
 async function submitTombstoneComment(
   username: string,
-  postId: string,
-  record: TombstoneRecord,
-  runMonsterKills: number,
-  runBossKills: number,
+  req: SubmitTombstoneCommentReq,
 ): Promise<void> {
   if (!context.postId) return
 
-  const idemKey = commentIdempotencyKey(username, postId, record.updatedAt)
-  const already = await redis.get(idemKey)
-  if (already) return
-
   const validation = validateRunKills({
-    monsterKills: runMonsterKills,
-    bossKills: runBossKills,
-    runElapsedMs: record.triggerMs,
+    monsterKills: req.monsterKills,
+    bossKills: req.bossKills,
+    runElapsedMs: req.triggerMs,
   })
   const monsterKills = validation.acceptedMonsterKills
-  const bossKills = validation.acceptedBossKills
+  const personalSection = buildBattleReportPersonalSection({
+    score: req.score,
+    triggerMs: req.triggerMs,
+    deathReasonId: req.deathReasonId,
+    monsterKills,
+    isNewRecord: req.isNewRecord,
+  })
 
   const weekly = await getWeeklyDefenseStatus()
   const gaugeBar = formatDefenseGaugeBar(weekly.percent)
   const percentStr = weekly.percent.toFixed(1)
-  const reason = deathReasonCommentText(record.deathReasonId)
 
   const text =
     `🪦 [${username}] 요원의 전사 보고서\n\n` +
     `[개인 기록]\n` +
-    `이번 작전에서 외계 괴수 [${monsterKills.toLocaleString()}마리] 소탕, 중형 보스 [${bossKills}기] 격추!\n` +
-    `통산 최고 기록을 **[${record.score.toLocaleString()}점]**으로 경신하며 고지에 비석을 세웠습니다.\n` +
-    `(사망 사유): ${reason}.\n\n` +
+    `${personalSection}\n\n` +
     `[전체 전황]\n` +
     `현재 서브레딧 주간 누적 킬 수: ${weekly.kills.toLocaleString()} / ${weekly.target.toLocaleString()}\n` +
     `이번 주 침공 방어율: ${gaugeBar} ${percentStr}%`
@@ -134,7 +129,6 @@ async function submitTombstoneComment(
     text,
     runAs: 'USER',
   })
-  await redis.set(idemKey, '1')
 }
 
 export async function listTombstones(
@@ -172,11 +166,17 @@ export async function upsertTombstone(
   const resolvedPost = resolveTombstonePostKey(postId)
   const key = tombstoneKey(resolvedPost)
   const existingRaw = await redis.hGet(key, username)
+  let existing: TombstoneRecord | null = null
   if (existingRaw) {
-    const existing = parseRecord(username, existingRaw)
-    if (existing && triggerMs <= existing.triggerMs) {
-      return {ok: true, updated: false, record: existing}
-    }
+    existing = parseRecord(username, existingRaw)
+  }
+
+  if (triggerMs < TOMBSTONE_MIN_PLAY_MS) {
+    return {ok: true, updated: false, record: existing}
+  }
+
+  if (existing && triggerMs <= existing.triggerMs) {
+    return {ok: true, updated: false, record: existing}
   }
 
   const updatedAt = Date.now()
@@ -198,19 +198,48 @@ export async function upsertTombstone(
     }),
   })
 
-  try {
-    await submitTombstoneComment(
-      username,
-      resolvedPost,
-      stored,
-      monsterKills,
-      bossKills,
-    )
-  } catch (err) {
-    console.error('tombstone comment failed', err)
+  return {ok: true, updated: true, record: stored}
+}
+
+export async function submitTombstoneCommentForUser(
+  username: string,
+  postId: string | undefined,
+  req: SubmitTombstoneCommentReq,
+): Promise<
+  | {ok: true; submitted: boolean; cooldownRemainingMs?: number}
+  | {error: string; status: number}
+> {
+  if (username === 'anonymous') {
+    return {error: 'anonymous cannot submit comment', status: 403}
   }
 
-  return {ok: true, updated: true, record: stored}
+  const resolvedPost = resolveTombstonePostKey(postId)
+  const lastKey = commentLastAtKey(username, resolvedPost)
+  const cooldownMs = tombstoneCommentCooldownMs(req.isNewRecord)
+  const lastRaw = await redis.get(lastKey)
+  if (lastRaw) {
+    const lastAt = Number.parseInt(lastRaw, 10)
+    if (Number.isFinite(lastAt)) {
+      const elapsed = Date.now() - lastAt
+      if (elapsed < cooldownMs) {
+        return {
+          ok: true,
+          submitted: false,
+          cooldownRemainingMs: cooldownMs - elapsed,
+        }
+      }
+    }
+  }
+
+  try {
+    await submitTombstoneComment(username, req)
+  } catch (err) {
+    console.error('tombstone comment failed', err)
+    return {error: 'comment submission failed', status: 500}
+  }
+
+  await redis.set(lastKey, String(Date.now()))
+  return {ok: true, submitted: true}
 }
 
 export async function claimTombstones(

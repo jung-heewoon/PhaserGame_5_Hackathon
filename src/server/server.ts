@@ -22,12 +22,14 @@ import {
   type SetPersistenceRsp,
   type SubmitLeaderboardReq,
   type SubmitLeaderboardRsp,
+  type SubmitTombstoneCommentReq,
+  type SubmitTombstoneCommentRsp,
   type UpsertTombstoneReq,
   type UpsertTombstoneRsp,
 } from '../shared/api.ts'
 import {dbGetPersistenceBulk, dbGetUsername, dbSetPersistence} from './db.ts'
 import {getLeaderboards, submitLeaderboardScore} from './leaderboard.ts'
-import {claimTombstones, listTombstones, upsertTombstone} from './tombstone.ts'
+import {claimTombstones, listTombstones, submitTombstoneCommentForUser, upsertTombstone} from './tombstone.ts'
 import {
   contributeWeeklyDefense,
   getWeeklyDefenseStatus,
@@ -40,6 +42,7 @@ type AnyRsp =
   | SetPersistenceRsp
   | SubmitLeaderboardRsp
   | UpsertTombstoneRsp
+  | SubmitTombstoneCommentRsp
   | ClaimTombstonesRsp
   | GetWeeklyDefenseRsp
   | ContributeWeeklyDefenseRsp
@@ -92,6 +95,9 @@ async function route(
         break
       case Endpoint.UpsertTombstone:
         rsp = await routeUpsertTombstone(reqMsg)
+        break
+      case Endpoint.SubmitTombstoneComment:
+        rsp = await routeSubmitTombstoneComment(reqMsg)
         break
       case Endpoint.ClaimTombstones:
         rsp = await routeClaimTombstones(reqMsg)
@@ -186,6 +192,40 @@ async function routeUpsertTombstone(
   }
   const username = await dbGetUsername()
   return upsertTombstone(username, context.postId, req)
+}
+
+async function routeSubmitTombstoneComment(
+  reqMsg: IncomingMessage,
+): Promise<SubmitTombstoneCommentRsp | ErrorRsp> {
+  const req = await readJson<SubmitTombstoneCommentReq>(reqMsg)
+  if (
+    req.score === undefined ||
+    !Number.isFinite(req.score) ||
+    req.triggerMs === undefined ||
+    !Number.isFinite(req.triggerMs) ||
+    req.deathReasonId === undefined ||
+    !Number.isFinite(req.deathReasonId) ||
+    req.monsterKills === undefined ||
+    !Number.isFinite(req.monsterKills) ||
+    req.bossKills === undefined ||
+    !Number.isFinite(req.bossKills) ||
+    req.isNewRecord === undefined ||
+    typeof req.isNewRecord !== 'boolean'
+  ) {
+    return {
+      error:
+        'score, triggerMs, deathReasonId, monsterKills, bossKills, isNewRecord required',
+      status: 400,
+    }
+  }
+  const username = await dbGetUsername()
+  const result = await submitTombstoneCommentForUser(
+    username,
+    context.postId,
+    req,
+  )
+  if ('error' in result) return result
+  return result
 }
 
 async function routeClaimTombstones(

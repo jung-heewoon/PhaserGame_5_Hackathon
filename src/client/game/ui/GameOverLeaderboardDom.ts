@@ -282,12 +282,12 @@ export function resetGameOverLeaderboard(): void {
   if (meEl) meEl.innerHTML = '';
 }
 
-export function showGameOverLeaderboard(highScore: number): void {
+export function showGameOverLeaderboard(highScore: number, isNewRecord = false): void {
   bindTabs();
   bindLeaderboardBodyScroll();
   pendingHighScore = highScore;
   setTabActive('post');
-  void loadLeaderboard(highScore > 0 ? highScore : null);
+  void loadLeaderboard(isNewRecord && highScore > 0 ? highScore : null);
 }
 
 export function refreshGameOverLeaderboardLocale(): void {

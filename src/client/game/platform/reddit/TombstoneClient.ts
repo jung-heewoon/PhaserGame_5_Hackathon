@@ -2,6 +2,8 @@ import {
   Endpoint,
   type ClaimTombstonesRsp,
   type GetTombstonesRsp,
+  type SubmitTombstoneCommentReq,
+  type SubmitTombstoneCommentRsp,
   type UpsertTombstoneReq,
   type UpsertTombstoneRsp,
 } from '../../../../shared/api.ts';
@@ -40,6 +42,23 @@ class TombstoneClientImpl {
     const data = (await rsp.json()) as UpsertTombstoneRsp;
     this.cached = null;
     return data;
+  }
+
+  async submitDeathReportComment(
+    payload: SubmitTombstoneCommentReq,
+  ): Promise<SubmitTombstoneCommentRsp> {
+    const rsp = await fetch(Endpoint.SubmitTombstoneComment, {
+      body: JSON.stringify(payload),
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    });
+    if (!rsp.ok) {
+      throw new Error(`tombstone comment failed: ${rsp.status}`);
+    }
+    return (await rsp.json()) as SubmitTombstoneCommentRsp;
   }
 
   async claim(usernames: string[]): Promise<ClaimTombstonesRsp> {

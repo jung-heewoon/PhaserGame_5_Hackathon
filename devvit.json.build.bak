@@ -30,6 +30,13 @@
   "triggers": {
     "onAppInstall": "/internal/on/app/install"
   },
+  "permissions": {
+    "redis": true,
+    "reddit": {
+      "enable": true,
+      "asUser": ["SUBMIT_COMMENT"]
+    }
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "node scripts/watch-server.mjs"

@@ -10,6 +10,65 @@ export type TombstoneRecord = {
 
 export const DEATH_REASON_COUNT = 20
 
+/** 비석을 남길 수 있는 최소 생존 시간 (ms) */
+export const TOMBSTONE_MIN_PLAY_MS = 30_000
+
+/** 전사 보고서 댓글 재송신 쿨다운 — 신기록 (ms) */
+export const TOMBSTONE_COMMENT_COOLDOWN_NEW_RECORD_MS = 5 * 60 * 1000
+
+/** 전사 보고서 댓글 재송신 쿨다운 — 일반 사망 (ms) */
+export const TOMBSTONE_COMMENT_COOLDOWN_REGULAR_MS = 30 * 60 * 1000
+
+export function tombstoneCommentCooldownMs(isNewRecord: boolean): number {
+  return isNewRecord
+    ? TOMBSTONE_COMMENT_COOLDOWN_NEW_RECORD_MS
+    : TOMBSTONE_COMMENT_COOLDOWN_REGULAR_MS
+}
+
+export type BattleReportPersonalInput = {
+  score: number
+  triggerMs: number
+  deathReasonId: number
+  monsterKills: number
+  isNewRecord: boolean
+}
+
+/** Reddit 전사 보고서 [개인 기록] 본문 — 30초 미만이면 비석 문구 생략 */
+export function buildBattleReportPersonalSection(
+  input: BattleReportPersonalInput,
+): string {
+  const score = Math.max(0, Math.floor(input.score))
+  const triggerMs = Math.max(0, Math.floor(input.triggerMs))
+  const monsterKills = Math.max(0, Math.floor(input.monsterKills))
+  const reason = deathReasonCommentText(input.deathReasonId)
+  const tombstonePlaced = triggerMs >= TOMBSTONE_MIN_PLAY_MS
+
+  if (input.isNewRecord) {
+    const highScoreLine = tombstonePlaced
+      ? `통산 최고 기록을 **[${score.toLocaleString()}점]**으로 경신하며 고지에 비석을 세웠습니다.`
+      : `통산 최고 기록을 **[${score.toLocaleString()}점]**으로 경신했습니다.`
+    return (
+      `이번 작전에서 외계 괴수 [${monsterKills.toLocaleString()}마리] 소탕!\n` +
+      `${highScoreLine}\n` +
+      `(사망 사유): ${reason}.`
+    )
+  }
+
+  return (
+    `이번 작전에서 외계 괴수 [${monsterKills.toLocaleString()}마리] 소탕, ` +
+    `생존 **${score.toLocaleString()}점** / **${formatRunElapsedMs(triggerMs)}** 달성.\n` +
+    `(사망 사유): ${reason}.`
+  )
+}
+
+/** ms → m:ss */
+export function formatRunElapsedMs(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000))
+  const min = Math.floor(totalSec / 60)
+  const sec = totalSec % 60
+  return `${min}:${sec.toString().padStart(2, '0')}`
+}
+
 /** Server-side death reason text for Reddit comments (Korean). */
 export const DEATH_REASON_COMMENT_KO: readonly string[] = [
   '악마의 손톱에 긁혀',

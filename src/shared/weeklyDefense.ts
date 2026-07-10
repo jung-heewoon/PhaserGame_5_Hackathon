@@ -1,5 +1,5 @@
 export const WEEKLY_DEFENSE_CONFIG = {
-  baseTarget: 10_000,
+  baseTarget: 50_000,
   minTarget: 5_000,
   successTargetMul: 1.5,
   failTargetMul: 0.7,

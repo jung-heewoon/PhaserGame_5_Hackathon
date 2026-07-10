@@ -827,6 +827,41 @@
   justify-content: center;
 }
 
+.doom-gameover-death-report {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.doom-gameover-death-report.hidden {
+  display: none;
+}
+
+.doom-btn--death-report {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 8px;
+  min-height: 40px;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: keep-all;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doom-gameover-death-report__disclaimer {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+  color: rgba(220, 200, 180, 0.72);
+}
+
 .doom-modal__actions .doom-btn {
   flex: 1;
   padding: 12px 8px;

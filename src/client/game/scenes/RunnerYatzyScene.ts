@@ -86,7 +86,6 @@ import { TombstoneDirector } from '../systems/TombstoneDirector.ts';
 import { TombstonePickupFlow, pickDeathReasonForRun } from '../systems/TombstonePickupFlow.ts';
 import { feverTimeSystem } from '../systems/FeverTimeSystem.ts';
 import { highScoreStore } from '../systems/HighScoreStore.ts';
-import { tombstoneClient } from '../platform/reddit/TombstoneClient.ts';
 import { weeklyDefenseClient } from '../platform/reddit/WeeklyDefenseClient.ts';
 import { weeklyDefenseBootState } from '../systems/WeeklyDefenseBootState.ts';
 import {
@@ -547,6 +546,14 @@ export class RunnerYatzyScene extends Phaser.Scene {
         runElapsedMs: this.session.runElapsedMs,
       };
       const validated = validateRunKills(killPayload);
+      const runReportPayload = {
+        score: this.session.survivalScore,
+        triggerMs: this.session.runElapsedMs,
+        coinsAtDeath: this.coinSystem.coins,
+        deathReasonId: pickDeathReasonForRun(),
+        monsterKills: validated.acceptedMonsterKills,
+        bossKills: validated.acceptedBossKills,
+      };
       const contributePromise = weeklyDefenseClient
         .contribute({
           monsterKills: validated.acceptedMonsterKills,
@@ -557,18 +564,6 @@ export class RunnerYatzyScene extends Phaser.Scene {
           console.warn('weekly-defense contribute failed', err);
           return weeklyDefenseClient.getCached();
         });
-      if (isNewRecord) {
-        void tombstoneClient
-          .upsertOnDeath({
-            score: this.session.survivalScore,
-            triggerMs: this.session.runElapsedMs,
-            coinsAtDeath: this.coinSystem.coins,
-            deathReasonId: pickDeathReasonForRun(),
-            monsterKills: validated.acceptedMonsterKills,
-            bossKills: validated.acceptedBossKills,
-          })
-          .catch((err) => console.warn('tombstone upsert failed', err));
-      }
       if (this.player) {
         updateStatusHud({
           score: this.session.survivalScore,
@@ -588,6 +583,7 @@ export class RunnerYatzyScene extends Phaser.Scene {
             highScore,
             isNewRecord,
             weeklyDefense: weeklyDefense ?? undefined,
+            runReport: runReportPayload,
           },
           () => {
             this.scene.restart();

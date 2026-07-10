@@ -58,7 +58,7 @@ export type ContributeWeeklyDefenseRsp = WeeklyDefenseStatus & {
   rejected?: boolean
 }
 
-/** Upsert the current user's tombstone on new survival record. */
+/** Upsert the current user's tombstone at death (post-scoped, 1 per user). */
 export type UpsertTombstoneReq = {
   score: number
   triggerMs: number
@@ -71,6 +71,21 @@ export type UpsertTombstoneRsp = {
   ok: true
   updated: boolean
   record: TombstoneRecord | null
+}
+
+/** Post a battle report as a Reddit comment (explicit user action). */
+export type SubmitTombstoneCommentReq = {
+  score: number
+  triggerMs: number
+  deathReasonId: number
+  monsterKills: number
+  bossKills: number
+  isNewRecord: boolean
+}
+export type SubmitTombstoneCommentRsp = {
+  ok: true
+  submitted: boolean
+  cooldownRemainingMs?: number
 }
 
 /** Claim other users' tombstones (1-time, deletes from Redis). */
@@ -89,6 +104,7 @@ export const Endpoint = {
   SubmitLeaderboard: 'api/leaderboard/submit',
   GetTombstones: 'api/tombstone/list',
   UpsertTombstone: 'api/tombstone/upsert',
+  SubmitTombstoneComment: 'api/tombstone/submit-comment',
   ClaimTombstones: 'api/tombstone/claim',
   GetWeeklyDefense: 'api/weekly-defense/status',
   ContributeWeeklyDefense: 'api/weekly-defense/contribute',
@@ -103,6 +119,7 @@ export const EndpointMethod = {
   [Endpoint.SubmitLeaderboard]: 'POST',
   [Endpoint.GetTombstones]: 'GET',
   [Endpoint.UpsertTombstone]: 'POST',
+  [Endpoint.SubmitTombstoneComment]: 'POST',
   [Endpoint.ClaimTombstones]: 'POST',
   [Endpoint.GetWeeklyDefense]: 'GET',
   [Endpoint.ContributeWeeklyDefense]: 'POST',

@@ -7,6 +7,8 @@ import {
 
 /** Tombstone.png 전체 이미지 (138×110) — Heart 픽업과 동일하게 frame×scale로 표시 */
 export const TOMBSTONE_CONFIG = {
+  /** 최소 생존 시간 — 미만이면 비석 미생성 */
+  minPlayMs: 30_000,
   poolSize: 12,
   frameWidthPx: 138,
   frameHeightPx: 110,

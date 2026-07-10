@@ -15,6 +15,7 @@ import {
   type SetPersistenceReq,
   type SetPersistenceRsp,
   type SubmitLeaderboardRsp,
+  type SubmitTombstoneCommentRsp,
   type UpsertTombstoneRsp,
 } from '../shared/api.ts'
 import {
@@ -22,6 +23,12 @@ import {
   validateRunKills,
   WEEKLY_DEFENSE_CONFIG,
 } from '../shared/weeklyDefense.ts'
+import {
+  buildBattleReportPersonalSection,
+  TOMBSTONE_COMMENT_COOLDOWN_NEW_RECORD_MS,
+  TOMBSTONE_COMMENT_COOLDOWN_REGULAR_MS,
+  TOMBSTONE_MIN_PLAY_MS,
+} from '../shared/tombstone.ts'
 import {onReq} from './server.ts'
 import {setWeeklyDefenseNowMsForTests} from './weeklyDefense.ts'
 
@@ -45,6 +52,9 @@ const redisZScore = redis.zScore.bind(redis)
 const redisZCard = redis.zCard.bind(redis)
 const redisZRemRangeByRank = redis.zRemRangeByRank.bind(redis)
 const redditGetCurrentUsername = reddit.getCurrentUsername.bind(reddit)
+const redditSubmitComment = (
+  reddit as {submitComment?: (opts: unknown) => Promise<unknown>}
+).submitComment?.bind(reddit)
 
 function sortedSetFor(key: string): ZMember[] {
   let set = redisSortedSets.get(key)
@@ -134,6 +144,8 @@ before(async () => {
     return removeCount
   }
   reddit.getCurrentUsername = async () => 'test-user'
+  ;(reddit as {submitComment: (opts: unknown) => Promise<void>}).submitComment =
+    async () => {}
 
   server = createServer(async (req, rsp) => {
     await runWithContext(
@@ -167,6 +179,10 @@ after(async () => {
   redis.zCard = redisZCard
   redis.zRemRangeByRank = redisZRemRangeByRank
   reddit.getCurrentUsername = redditGetCurrentUsername
+  if (redditSubmitComment) {
+    ;(reddit as {submitComment: (opts: unknown) => Promise<unknown>}).submitComment =
+      redditSubmitComment
+  }
   if (!server.listening) return
   await new Promise<void>((resolve, reject) => {
     server.close(err => (err ? reject(err) : resolve()))
@@ -327,6 +343,158 @@ test('upsert tombstone and list', async () => {
   assert.ok(mine)
   assert.equal(mine.score, 15400)
   assert.equal(mine.triggerMs, 120000)
+})
+
+test('upsert tombstone skipped under min play time', async () => {
+  const rsp = await fetch(`${serverURL}/${Endpoint.UpsertTombstone}`, {
+    body: JSON.stringify({
+      score: 1000,
+      triggerMs: 15000,
+      coinsAtDeath: 10,
+      deathReasonId: 0,
+      monsterKills: 5,
+      bossKills: 0,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(rsp.status, 200)
+  const body = (await rsp.json()) as UpsertTombstoneRsp
+  assert.equal(body.updated, false)
+  assert.equal(body.record, null)
+})
+
+test('submit tombstone comment without tombstone', async () => {
+  const commentRsp = await fetch(`${serverURL}/${Endpoint.SubmitTombstoneComment}`, {
+    body: JSON.stringify({
+      score: 5000,
+      triggerMs: 60000,
+      deathReasonId: 0,
+      monsterKills: 50,
+      bossKills: 0,
+      isNewRecord: false,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(commentRsp.status, 200)
+  const commentBody = (await commentRsp.json()) as SubmitTombstoneCommentRsp
+  assert.equal(commentBody.submitted, true)
+})
+
+test('submit tombstone comment after upsert', async () => {
+  const upsertRsp = await fetch(`${serverURL}/${Endpoint.UpsertTombstone}`, {
+    body: JSON.stringify({
+      score: 20000,
+      triggerMs: 180000,
+      coinsAtDeath: 500,
+      deathReasonId: 2,
+      monsterKills: 200,
+      bossKills: 3,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(upsertRsp.status, 200)
+
+  const commentRsp = await fetch(`${serverURL}/${Endpoint.SubmitTombstoneComment}`, {
+    body: JSON.stringify({
+      score: 20000,
+      triggerMs: 180000,
+      deathReasonId: 2,
+      monsterKills: 200,
+      bossKills: 3,
+      isNewRecord: true,
+    }),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(commentRsp.status, 200)
+  const commentBody = (await commentRsp.json()) as SubmitTombstoneCommentRsp
+  assert.equal(commentBody.submitted, true)
+})
+
+test('submit tombstone comment respects regular cooldown', async () => {
+  const payload = {
+    score: 8000,
+    triggerMs: 90000,
+    deathReasonId: 1,
+    monsterKills: 80,
+    bossKills: 1,
+    isNewRecord: false,
+  }
+  const firstRsp = await fetch(`${serverURL}/${Endpoint.SubmitTombstoneComment}`, {
+    body: JSON.stringify(payload),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(firstRsp.status, 200)
+  const firstBody = (await firstRsp.json()) as SubmitTombstoneCommentRsp
+  assert.equal(firstBody.submitted, true)
+
+  const secondRsp = await fetch(`${serverURL}/${Endpoint.SubmitTombstoneComment}`, {
+    body: JSON.stringify(payload),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(secondRsp.status, 200)
+  const secondBody = (await secondRsp.json()) as SubmitTombstoneCommentRsp
+  assert.equal(secondBody.submitted, false)
+  assert.ok((secondBody.cooldownRemainingMs ?? 0) > TOMBSTONE_COMMENT_COOLDOWN_REGULAR_MS - 5000)
+})
+
+test('submit tombstone comment respects new record cooldown', async () => {
+  const payload = {
+    score: 12000,
+    triggerMs: 120000,
+    deathReasonId: 2,
+    monsterKills: 120,
+    bossKills: 1,
+    isNewRecord: true,
+  }
+  const firstRsp = await fetch(`${serverURL}/${Endpoint.SubmitTombstoneComment}`, {
+    body: JSON.stringify(payload),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(firstRsp.status, 200)
+  const firstBody = (await firstRsp.json()) as SubmitTombstoneCommentRsp
+  assert.equal(firstBody.submitted, true)
+
+  const secondRsp = await fetch(`${serverURL}/${Endpoint.SubmitTombstoneComment}`, {
+    body: JSON.stringify(payload),
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+  })
+  assert.equal(secondRsp.status, 200)
+  const secondBody = (await secondRsp.json()) as SubmitTombstoneCommentRsp
+  assert.equal(secondBody.submitted, false)
+  assert.ok(
+    (secondBody.cooldownRemainingMs ?? 0) > TOMBSTONE_COMMENT_COOLDOWN_NEW_RECORD_MS - 5000,
+  )
+})
+
+test('battle report omits tombstone line under min play time', () => {
+  const section = buildBattleReportPersonalSection({
+    score: 9000,
+    triggerMs: TOMBSTONE_MIN_PLAY_MS - 1,
+    deathReasonId: 0,
+    monsterKills: 40,
+    isNewRecord: true,
+  })
+  assert.ok(!section.includes('비석을 세웠습니다'))
+  assert.ok(section.includes('경신했습니다'))
+})
+
+test('battle report includes tombstone line at min play time', () => {
+  const section = buildBattleReportPersonalSection({
+    score: 9000,
+    triggerMs: TOMBSTONE_MIN_PLAY_MS,
+    deathReasonId: 0,
+    monsterKills: 40,
+    isNewRecord: true,
+  })
+  assert.ok(section.includes('비석을 세웠습니다'))
 })
 
 test('upsert tombstone keeps higher trigger only', async () => {
