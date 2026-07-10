@@ -482,8 +482,8 @@ test('battle report omits tombstone line under min play time', () => {
     monsterKills: 40,
     isNewRecord: true,
   })
-  assert.ok(!section.includes('비석을 세웠습니다'))
-  assert.ok(section.includes('경신했습니다'))
+  assert.ok(!section.includes('placed a tombstone'))
+  assert.ok(section.includes('new personal best'))
 })
 
 test('battle report includes tombstone line at min play time', () => {
@@ -494,7 +494,7 @@ test('battle report includes tombstone line at min play time', () => {
     monsterKills: 40,
     isNewRecord: true,
   })
-  assert.ok(section.includes('비석을 세웠습니다'))
+  assert.ok(section.includes('placed a tombstone'))
 })
 
 test('upsert tombstone keeps higher trigger only', async () => {

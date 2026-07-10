@@ -45,19 +45,19 @@ export function buildBattleReportPersonalSection(
 
   if (input.isNewRecord) {
     const highScoreLine = tombstonePlaced
-      ? `통산 최고 기록을 **[${score.toLocaleString()}점]**으로 경신하며 고지에 비석을 세웠습니다.`
-      : `통산 최고 기록을 **[${score.toLocaleString()}점]**으로 경신했습니다.`
+      ? `Set a new personal best of **[${score.toLocaleString()} pts]** and placed a tombstone on the ridge.`
+      : `Set a new personal best of **[${score.toLocaleString()} pts]**.`
     return (
-      `이번 작전에서 외계 괴수 [${monsterKills.toLocaleString()}마리] 소탕!\n` +
+      `Eliminated [${monsterKills.toLocaleString()}] alien horrors this run!\n` +
       `${highScoreLine}\n` +
-      `(사망 사유): ${reason}.`
+      `(Cause of death): ${reason}.`
     )
   }
 
   return (
-    `이번 작전에서 외계 괴수 [${monsterKills.toLocaleString()}마리] 소탕, ` +
-    `생존 **${score.toLocaleString()}점** / **${formatRunElapsedMs(triggerMs)}** 달성.\n` +
-    `(사망 사유): ${reason}.`
+    `Eliminated [${monsterKills.toLocaleString()}] alien horrors this run — ` +
+    `survived **${score.toLocaleString()} pts** / **${formatRunElapsedMs(triggerMs)}**.\n` +
+    `(Cause of death): ${reason}.`
   )
 }
 
@@ -69,28 +69,28 @@ export function formatRunElapsedMs(ms: number): string {
   return `${min}:${sec.toString().padStart(2, '0')}`
 }
 
-/** Server-side death reason text for Reddit comments (Korean). */
-export const DEATH_REASON_COMMENT_KO: readonly string[] = [
-  '악마의 손톱에 긁혀',
-  '주사위 굴리다 몹이랑 눈이 맞아',
-  '보스 브링어의 빔에 흡수되어',
-  '미니건 과열로 총이 폭발하며',
-  '야찌 팝업 보는 사이에',
-  '코인 줍다가 허리를 삐끗해',
-  '레일건 반동에 튕겨져 나가',
-  '핵미사일 자폭 범위 안에서',
-  '가디언 스파이크에 꿰뚫려',
-  '안개 너머로 떨어져',
-  '콤보 자랑하다 방심해서',
-  '탄창 없는데 야찌 안 열어서',
-  '듀얼 피스톨 반동에 양손이 꼬여',
-  '샷건 근접전에서 자기 산탄에',
-  '미사일 유도 실패로 벽에 박혀',
-  '보스 상자 열려는데 몹에게 습격당해',
-  '주사위 다섯 개가 동시에 1이 나와 운명에 굴복해',
-  '런너 족보 연습하다 길을 잃어',
-  'Reddit 댓글 읽다가 산만해져',
-  '비석 밟으려다 발이 꼬여',
+/** Server-side death reason text for Reddit comments (English). */
+export const DEATH_REASON_COMMENT_EN: readonly string[] = [
+  'clawed by a demon\'s nails',
+  'locked eyes with a mob while rolling dice',
+  'absorbed by the Bringer\'s beam',
+  'blown up by an overheated minigun',
+  'while staring at the Yatzy popup',
+  'threw out their back picking up coins',
+  'knocked away by railgun recoil',
+  'caught in their own nuke',
+  'impaled on a Guardian spike',
+  'fell beyond the fog',
+  'got cocky showing off a combo',
+  'ran dry without opening Yatzy',
+  'tangled both hands on dual pistols',
+  'shot themselves with a shotgun',
+  'slammed into a wall chasing a missile',
+  'ambushed while opening a boss chest',
+  'surrendered to five ones on the dice',
+  'got lost practicing poker hands',
+  'distracted reading Reddit comments',
+  'tripped trying to step on a tombstone',
 ]
 
 export function deathReasonCommentText(reasonId: number): string {
@@ -99,7 +99,7 @@ export function deathReasonCommentText(reasonId: number): string {
     Math.min(DEATH_REASON_COUNT - 1, Math.floor(reasonId)),
   )
   return (
-    DEATH_REASON_COMMENT_KO[idx] ?? DEATH_REASON_COMMENT_KO[0] ?? '전사하며'
+    DEATH_REASON_COMMENT_EN[idx] ?? DEATH_REASON_COMMENT_EN[0] ?? 'fell in battle'
   )
 }
 

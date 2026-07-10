@@ -109,12 +109,12 @@ async function submitTombstoneComment(
   const percentStr = weekly.percent.toFixed(1)
 
   const text =
-    `🪦 [${username}] 요원의 전사 보고서\n\n` +
-    `[개인 기록]\n` +
+    `🪦 [${username}]'s Battle Report\n\n` +
+    `[Personal Record]\n` +
     `${personalSection}\n\n` +
-    `[전체 전황]\n` +
-    `현재 서브레딧 주간 누적 킬 수: ${weekly.kills.toLocaleString()} / ${weekly.target.toLocaleString()}\n` +
-    `이번 주 침공 방어율: ${gaugeBar} ${percentStr}%`
+    `[Community Status]\n` +
+    `Subreddit weekly kills: ${weekly.kills.toLocaleString()} / ${weekly.target.toLocaleString()}\n` +
+    `This week's invasion defense: ${gaugeBar} ${percentStr}%`
 
   const api = reddit as RedditCommentApi
   if (typeof api.submitComment !== 'function') {
