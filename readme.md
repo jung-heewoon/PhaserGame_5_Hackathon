@@ -125,7 +125,9 @@ See [`AGENTS.md`](./AGENTS.md) for contributor-oriented architecture notes.
 Configured in `devvit.json`:
 
 - `redis` — user persistence, leaderboards, tombstones, weekly defense
-- `reddit.asUser: ["SUBMIT_COMMENT"]` — Battle Report comments as the logged-in user
+- `reddit.asUser: ["SUBMIT_COMMENT"]` — enables `reddit.submitComment({ runAs: "USER" })` for Battle Reports
+
+> **Note:** The runtime error mentions `PERMISSION_SCOPE_NAME` as a placeholder. The actual `devvit.json` enum (Devvit 0.13.x schema) is **`SUBMIT_COMMENT`**, not lowercase `"submit"`. Using `"submit"` fails config validation.
 
 ---
 
