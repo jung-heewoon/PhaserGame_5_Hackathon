@@ -1,4 +1,20 @@
-/node_modules/
-/dist/
-/public/*.js*
-/.env
+# Node modules
+node_modules/
+
+# Phaser / Vite build artifacts
+dist/
+
+# Devvit local state & private keys (never commit)
+.devvit/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Local editor / OS noise
+.DS_Store
+Thumbs.db
+
+# Optional: generated JS in public (if any build step emits here)
+public/*.js*
