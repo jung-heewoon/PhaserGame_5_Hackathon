@@ -22,7 +22,7 @@
     "@devvit/web": "0.13.7",
     "devvit": "0.13.7",
     "gl-matrix": "^3.4.4",
-    "phaser": "^3.90.0",
+    "phaser": "^4.2.1",
     "phaser3-rex-plugins": "^1.80.20",
     "twopointfive-phaser-3": "github:jamaalsawyerd/twopointfive-phaser-3#706a99d001e85c9cb48971ab93ad430a28803d6c",
     "webfontloader": "^1.6.28"
