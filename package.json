@@ -18,9 +18,9 @@
     "test:unit": "node --experimental-strip-types --no-warnings=ExperimentalWarning --test src/**/*.test.ts"
   },
   "dependencies": {
-    "@devvit/start": "0.13.7",
-    "@devvit/web": "0.13.7",
-    "devvit": "0.13.7",
+    "@devvit/start": "0.13.8",
+    "@devvit/web": "0.13.8",
+    "devvit": "0.13.8",
     "gl-matrix": "^3.4.4",
     "phaser": "^3.90.0",
     "phaser3-rex-plugins": "^1.80.20",
